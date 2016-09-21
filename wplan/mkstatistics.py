@@ -1,6 +1,32 @@
 # -*- coding:utf-8 -*-
-
+import requests
+import mechanize
+# #######################
 INPUT_ARGS = ''
+
+# jira web
+def login(user, passwd):
+    br = mechanize.Browser()
+    br.set_handle_equiv(True)
+    br.set_handle_redirect(True)  
+    br.set_handle_referer(True)  
+    br.set_handle_robots(False)  
+    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)  
+    br.set_debug_http(False)
+    response = br.open('https://jira01.devtools.intel.com/login.jsp?os_destination=%2Fsecure%2FDashboard.jspa')
+    br.select_form(nr=1)
+    br['os_username'] = INPUT_ARGS.user
+    br['os_password'] = INPUT_ARGS.passwd
+    br.submit()
+    return br
+
+# #######################
+def get_comments(jiraId):
+    global INPUT_ARGS
+    br = login(INPUT_ARGS.user, INPUT_ARGS.passwd)
+    response = br.open('https://jira01.devtools.intel.com/browse/%s' % jiraId)
+    print(br.response().read())
+
 def get_abi_to_test(argument):
     switcher = {
         1: "x86",
@@ -95,10 +121,22 @@ def output_plan(result):
     xmlStr = '</configuration>'
     f.write(xmlStr)
 
-def cmdline():
+def cmdline(args=None):
     import argparse
     global INPUT_ARGS
     parser = argparse.ArgumentParser()
+    if(args != None):
+        return parser.parse_args(args)
+
+    parser.add_argument('-u','--user',
+                        action='store',
+                        dest='user',
+                        default='labinxux',
+                        help='user to login')
+    parser.add_argument('-p', '--passwd',
+                        action='store',
+                        default='Sep@0909',
+                        help='password for user')
 
     parser.add_argument('-o', '--output', action="store",
                         dest='output_file',
@@ -108,7 +146,7 @@ def cmdline():
     parser.add_argument('-i', '--input', action='store',
                         dest='input_file',
                         required=True,
-                        default='./data/cts_report.txt'
+                        default='./data/cts_report.txt',
                         help='input file')
 
     INPUT_ARGS = parser.parse_args()
@@ -120,4 +158,5 @@ def main():
     result = parse(args.input_file)
     output_plan(result)
 
-main()
+if __name__=='__main__':
+    main()

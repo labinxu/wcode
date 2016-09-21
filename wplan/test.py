@@ -1,9 +1,21 @@
-import mkplan
+#-*- coding: utf-8 -*-
 
-def test_get_jiraid():
-    print('test_get_jiraid')
-    url, jiraid = mkplan.get_jiraid('# =HYPERLINK("https://jira01.devtools.intel.com/browse/OAM-37493","OAM-37493")')
-    print(jiraid)
-    print(url)
+import unittest
 
-test_get_jiraid()
+class Param:
+    def __init__(self):
+        self.user = 'labinxu'
+        self.passwd = 'Sep@0909'
+        self.input_file=''
+
+
+class MkstatisticsTestCases(unittest.TestCase):
+    def testGetComments(self):
+        import mkstatistics
+        mkstatistics.INPUT_ARGS = Param()
+        #mkstatistics.cmdline('-u','labinxux', '-p', 'Sep@0909'])
+        assert('ok' == mkstatistics.get_comments('OAM-37814'))
+
+
+if __name__ == '__main__':
+    unittest.main()

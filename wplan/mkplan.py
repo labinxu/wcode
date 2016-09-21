@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 
+import re
 INPUT_ARGS = ''
+
 def get_abi_to_test(argument):
     switcher = {
         1: "x86",
@@ -8,72 +10,104 @@ def get_abi_to_test(argument):
     }
     return switcher.get(argument, "nothing")
 result = ''
+
+def parseAbiType(abiData):
+    pass
+    # ##########################################
+    # res=[]
+    # for i, rr in enumerate(r[-6:-2]):
+
+            #     if(rr.lower() == 'fail'):
+    #         abi = abitype[i]
+    #         res.append(abi)
+    #     if(res == []):
+    #         break
+
+            # #######################################
+    # ## check abi
+    # abis = set(res)
+    # ABIS = set(abitype.values())
+    # ret_abis = abis & ABIS
+    # abi_ret = 0
+    # for i in ret_abis:
+    #     abi_ret |= i
+    # print(abi_ret)
+
+
+
+def getJiraId(text):
+    pattern = re.compile("(https://jira01.devtools.intel.com/browse/)(OAM-\d{5})")
+    ret  = pattern.findall(text)
+    if(ret == []):
+        raise Exception('no jira id found!')
+    return ret[0][1]
+
+
+def parseJiraIds(jiraIds):
+    return [id.strip().lower() for id  in jiraIds.split(',')]
+
+
+def shouldTest(jiraId,jiraIds):
+    if(jiraIds == ''):
+        return True
+
+    return jiraId != '' and jiraId.lower() in jiraIds
+
+
 def parse(filename):
-    f = open(filename)
-    abitype= {}
-    # abitype[0] = 'x86'
-    # abitype[1] = 'x86_64'
-    # abitype[2] = 'armeabi-v7a'
-    # abitype[3] = 'arm64-v8a'
-    abitype[0] = 1 #'x86'
-    abitype[1] = 1 #'x86_64'
-    abitype[2] = 2 #'armeabi-v7a'
-    abitype[3] = 2 #'arm64-v8a'
-
-    result = {}
-    begin = False
-    module = ''
-    jiraId = ''
-    for l in f.readlines():
-        r = l.split(',')
-        if(begin):
-            r = r[0:8]
-            if(r[0] != ''):
-                module = r[0]
-
-            if(r[-1] != ''):
-                jiraId = r [-1]
-
-            if(r[1] == ''):
-                continue
+    with open(filename) as f:
+        result = {}
+        begin = False
+        module = ''
+        jiraId = ''
+        jiraIds = ''
+        for l in f.readlines():
+            r = l.split(INPUT_ARGS.seperator)
             ##########################################
+            ## check begin
+            if(not begin):
+                if(r[0]=='Module'):
+                    begin = True
+                continue
 
-            res=[]
-            for i, rr in enumerate(r[-6:-2]):
+                # juge the jiraids
+            if(INPUT_ARGS.jiraids != None):
+                jiraIds = parseJiraIds(INPUT_ARGS.jiraids)
 
-                if(rr.lower() == 'fail'):
-                    abi = abitype[i]
-                    res.append(abi)
-            if(res == []):
-                break
+            r = r[0:8]
 
-            #######################################
-            ## check abi
-            abis = set(res)
-            ABIS = set(abitype.values())
-            ret_abis = abis & ABIS
-            abi_ret = 0
-            for i in ret_abis:
-                abi_ret |= i
-            # print(abi_ret)
+            # jira ticket
+            if(r[-1].strip() != ''):
+                try:
+                    jiraId = getJiraId(r[-1].strip())
+                except Exception,e:
+                    pass
+                finally:
+                    pass
+
+            if(not shouldTest(jiraId, jiraIds)):
+                continue
+
+            if(r[0].strip() != ''):
+                module = r[0].strip()
+
+            # not test
+            if(r[1].strip() == ''):
+                continue
 
             rret=[]
             ##### check result
             # add module
             rret.append(module)
             # add testcase
-            rret.append(r[1])
+            rret.append(r[1].strip())
             if(not result.has_key(jiraId)):
                 result[jiraId]=[]
             result[jiraId].append(rret)
-        ##########################################
-        ## check begin
-        if(r[0]=='Module'):
-            begin = True
-            continue
-    # display
-    f.close()
-    return result
+
+
+        # display
+        return result
 
 
 def output_plan(result):
@@ -100,9 +134,15 @@ def cmdline():
     global INPUT_ARGS
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--jiraid', action="store",
-                        dest='jiraIds',
+    parser.add_argument('-j', '--jiraid', action="store",
+                        dest='jiraids',
+                        default=None,
                         help='jira id for plan xml')
+
+    parser.add_argument('-s', '--seperator', action="store",
+                        dest='seperator',
+                        default='|',
+                        help='seperator for source file')
 
     parser.add_argument('-o', '--output', action="store",
                         dest='output_file',
@@ -120,12 +160,12 @@ def cmdline():
                         help='cts or gts')
 
     INPUT_ARGS = parser.parse_args()
-
     return INPUT_ARGS;
 
 def main():
-    args = cmdline()
-    result = parse(args.input_file)
+    INPUT_ARGS = cmdline()
+    result = parse(INPUT_ARGS.input_file)
     output_plan(result)
 
-main()
+if __name__ == '__main__':
+    main()
