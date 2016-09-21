@@ -1,8 +1,11 @@
 # -*- coding:utf-8 -*-
 import requests
 import mechanize
+import copy
+
 # #######################
 INPUT_ARGS = ''
+
 
 # jira web
 def login(user, passwd):
@@ -20,6 +23,7 @@ def login(user, passwd):
     br.submit()
     return br
 
+
 # #######################
 def get_comments(jiraId):
     global INPUT_ARGS
@@ -27,99 +31,85 @@ def get_comments(jiraId):
     response = br.open('https://jira01.devtools.intel.com/browse/%s' % jiraId)
     print(br.response().read())
 
-def get_abi_to_test(argument):
-    switcher = {
-        1: "x86",
-        2: "",
-    }
-    return switcher.get(argument, "nothing")
-result = ''
+def countRowFailuers(data):
+    data = [item.strip().lower() for item in data]
+    count = 0
+    for d in data:
+        if d == 'fail':
+            count += 1
+    return count
+
+
+def countFailuers(data):
+    pass
+
+
 def parse(filename):
-    f = open(filename)
-    abitype= {}
-    # abitype[0] = 'x86'
-    # abitype[1] = 'x86_64'
-    # abitype[2] = 'armeabi-v7a'
-    # abitype[3] = 'arm64-v8a'
-    abitype[0] = 1 #'x86'
-    abitype[1] = 1 #'x86_64'
-    abitype[2] = 2 #'armeabi-v7a'
-    abitype[3] = 2 #'arm64-v8a'
+    result = []
+    with open(filename) as f:
+        begin = False
+        counter = False;
+        counterNum=0
+        for l in f.readlines():
+            r = l.split(INPUT_ARGS.seperator)
+            if(counter):
+                # next count
+                if(len(r)>6 and r[6].strip() != ''):
+                    counterNum += countRowFailuers(r[2:6])
 
-    result = {}
-    begin = False
-    module = ''
-    jiraId = ''
-    for l in f.readlines():
-        r = l.split(',')
-        if(begin):
-            r = r[0:8]
-            if(r[0] != ''):
-                module = r[0]
-
-            if(r[-1] != ''):
-                jiraId = r [-1]
-
-            if(r[1] == ''):
+            if(not begin):
+                if(r[0].strip()=='Module'):
+                   begin = True
+                result.append(r);
                 continue
-            ##########################################
+            else:
+                if(r[1].strip() == ''):
+                    result.append(r)
+                    continue
+                else:
+                    r = r[0:11]
+                    r[-1]=r[-1].strip()
 
-            res=[]
-            for i, rr in enumerate(r[-6:-2]):
+            result.append(r)
+            # fail number
+            failNumber = len(r)>6 and r[6].strip() or ''
 
-                if(rr.lower() == 'fail'):
-                    abi = abitype[i]
-                    res.append(abi)
-            if(res == []):
-                break
+            if(failNumber != ''):
+                if(counterNum != 0):
+                    # pre-line number
+                    last =copy.copy(result[-1][6])
+                    result[-1][6] = "%s\%s" % (counterNum, last)
+                    counterNum = 0
 
-            #######################################
-            ## check abi
-            abis = set(res)
-            ABIS = set(abitype.values())
-            ret_abis = abis & ABIS
-            abi_ret = 0
-            for i in ret_abis:
-                abi_ret |= i
-            # print(abi_ret)
-
-            rret=[]
-            ##### check result
-            # add module
-            rret.append(module)
-            # add testcase
-            rret.append(r[1])
-            if(not result.has_key(jiraId)):
-                result[jiraId]=[]
-            result[jiraId].append(rret)
-        ##########################################
-        ## check begin
-        if(r[0]=='Module'):
-            begin = True
-            continue
-    # display
-    f.close()
+                failNumber = int(failNumber)
+                counter = False
+                # count the failures
+                totalFails=countRowFailuers(r[2:6])
+                if(totalFails == 0):
+                    print(l)
+                    print(r[2:6])
+                if(failNumber != totalFails):
+                    counterNum = totalFails
+                    counter = True
     return result
 
 
-def output_plan(result):
-    f = open(INPUT_ARGS.output_file, 'wr')
-    xmlhead = '<?xml version="1.0" encoding="utf-8"?>\n'
-    xmlhead += '<configuration description="Runs failures in %s"/>\n' % INPUT_ARGS.output_file
-    xmlhead += ' '*4+'<include name="%s"/>\n' % INPUT_ARGS.test_type
-    f.write(xmlhead)
-    xmlFormat = ' '*4 + '<option name="%s" value="%s"/>\n'
-    for jiraid, caseset in result.items():
-        string = ''
-        for case_content in caseset:
-            casestr=''
-            if(len(case_content) !=2 ):
-                continue
-            xmlStr = xmlFormat % (case_content[0], case_content[1])
-            f.write(xmlStr)
+def output(result):
+    table = []
+    seperator = INPUT_ARGS.seperator
+    rowFormat = "%s"+INPUT_ARGS.seperator
+    for row in result:
+        rowstr = ''
+        for cell in row:
+            if(cell.strip()==''):
+                rowstr += seperator
+            else:
+                rowstr += rowFormat % cell
+        table.append(rowstr+'\n')
 
-    xmlStr = '</configuration>'
-    f.write(xmlStr)
+    with open(INPUT_ARGS.output_file,'w') as f:
+        f.writelines(table)
+
 
 def cmdline(args=None):
     import argparse
@@ -128,15 +118,10 @@ def cmdline(args=None):
     if(args != None):
         return parser.parse_args(args)
 
-    parser.add_argument('-u','--user',
-                        action='store',
-                        dest='user',
-                        default='labinxux',
-                        help='user to login')
-    parser.add_argument('-p', '--passwd',
-                        action='store',
-                        default='Sep@0909',
-                        help='password for user')
+    parser.add_argument('-s', '--seperator', action="store",
+                        dest='seperator',
+                        default='|',
+                        help='seperator for source file')
 
     parser.add_argument('-o', '--output', action="store",
                         dest='output_file',
@@ -156,7 +141,7 @@ def cmdline(args=None):
 def main():
     args = cmdline()
     result = parse(args.input_file)
-    output_plan(result)
+    output(result)
 
 if __name__=='__main__':
     main()
