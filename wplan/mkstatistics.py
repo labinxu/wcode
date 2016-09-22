@@ -1,11 +1,15 @@
 # -*- coding:utf-8 -*-
 import requests
 import mechanize
-import copy
+from bs4 import BeautifulSoup
+import utils
 
 # #######################
 INPUT_ARGS = ''
 
+def debugWritefile(data,filename):
+    with open(filename,'w') as f:
+        f.write(data)
 
 # jira web
 def login(user, passwd):
@@ -23,13 +27,39 @@ def login(user, passwd):
     br.submit()
     return br
 
-
 # #######################
-def get_comments(jiraId):
+def getComments(jiraId):
+
     global INPUT_ARGS
     br = login(INPUT_ARGS.user, INPUT_ARGS.passwd)
     response = br.open('https://jira01.devtools.intel.com/browse/%s' % jiraId)
-    print(br.response().read())
+    data = br.response().read()
+    print("Query %s" % jiraId)
+    return parseHtml(data)
+
+
+def parseHtml(data):
+    attrs = {'class':"issue-data-block activity-comment twixi-block  expanded"}
+    soup = BeautifulSoup(data,'html.parser')
+    commentsTag = soup.findAll('div',attrs=attrs)
+    commentAttrs = {'class':'action-body flooded'}
+    comments = {}
+    for itemTag in commentsTag:
+        user = itemTag.find('a', attrs={'class':"user-hover user-avatar"})
+        user = user.text
+
+        time = itemTag.find('time')
+        time = time.text
+
+        content = itemTag.find('div',attrs={'class':"action-body flooded"})
+        content = content.text
+        if not comments.has_key(user):
+            comments[time]=[]
+
+        comments[time].append((user,content))
+
+    return comments
+
 
 def countRowFailuers(data):
     data = [item.strip().lower() for item in data]
@@ -44,18 +74,34 @@ def countFailuers(data):
     pass
 
 
+GComments ={}
+def parseComments(jiraId):
+    global GComments
+    content = ''
+    if GComments.has_key(jiraId):
+        content = GComments[jiraId]
+    else:
+        comments = getComments(jiraId)
+        content = doParseComment(comments)
+        GComments[jiraId] = content
+    return content
+
+
+def doParseComment(comments):
+    item = comments.items()[-1]
+    comment = item[-1][-1][-1]
+    return comment
+
+
 def parse(filename):
     result = []
     with open(filename) as f:
         begin = False
         counter = False;
-        counterNum=0
+        counterNum = 0
+        markLine = ''
         for l in f.readlines():
             r = l.split(INPUT_ARGS.seperator)
-            if(counter):
-                # next count
-                if(len(r)>6 and r[6].strip() != ''):
-                    counterNum += countRowFailuers(r[2:6])
 
             if(not begin):
                 if(r[0].strip()=='Module'):
@@ -71,33 +117,52 @@ def parse(filename):
                     r[-1]=r[-1].strip()
 
             result.append(r)
+
+            # get comments from jira
+            try:
+                jiraId = r[7].strip() != '' and utils.GetJiraId(r[7]) or ''
+            except Exception,e:
+                pass
+
+            if(jiraId != ''):
+                comment = parseComments(jiraId)
+                print("JiraId %s comment %s" % (jiraId, comment))
+
             # fail number
             failNumber = len(r)>6 and r[6].strip() or ''
-
+            failCells = r[2:6]
             if(failNumber != ''):
+
                 if(counterNum != 0):
-                    # pre-line number
-                    last =copy.copy(result[-1][6])
-                    result[-1][6] = "%s\%s" % (counterNum, last)
+                    # set markLine
+
+                    markLine[-1] = "%s\%s" % (str(counterNum), markLine[6])
+                    markLine[6] = str(counterNum)
                     counterNum = 0
 
                 failNumber = int(failNumber)
                 counter = False
-                # count the failures
-                totalFails=countRowFailuers(r[2:6])
-                if(totalFails == 0):
-                    print(l)
-                    print(r[2:6])
+                totalFails=countRowFailuers(failCells)
                 if(failNumber != totalFails):
+                    markLine = r
                     counterNum = totalFails
                     counter = True
+            else:
+                if(counter):
+                    # next count
+                    counterNum += countRowFailuers(failCells)
+
     return result
 
 
 def output(result):
     table = []
-    seperator = INPUT_ARGS.seperator
-    rowFormat = "%s"+INPUT_ARGS.seperator
+    if INPUT_ARGS.output_type == 'txt':
+        seperator = INPUT_ARGS.seperator
+    else:
+        seperator = ','
+
+    rowFormat = "%s"+seperator
     for row in result:
         rowstr = ''
         for cell in row:
@@ -114,9 +179,19 @@ def output(result):
 def cmdline(args=None):
     import argparse
     global INPUT_ARGS
+
     parser = argparse.ArgumentParser()
     if(args != None):
         return parser.parse_args(args)
+
+    parser.add_argument('-u','--user',
+                        action='store',
+                        dest='user',
+                        help='user to login')
+
+    parser.add_argument('-p', '--passwd',
+                        action='store',
+                        help='password for user')
 
     parser.add_argument('-s', '--seperator', action="store",
                         dest='seperator',
@@ -128,6 +203,11 @@ def cmdline(args=None):
                         default='cts_result_st.txt',
                         help='output file')
 
+    parser.add_argument('-t', '--type', action="store",
+                        dest='output_type',
+                        default='txt',
+                        help='output file')
+    
     parser.add_argument('-i', '--input', action='store',
                         dest='input_file',
                         required=True,
@@ -137,6 +217,7 @@ def cmdline(args=None):
     INPUT_ARGS = parser.parse_args()
 
     return INPUT_ARGS;
+
 
 def main():
     args = cmdline()
