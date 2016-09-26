@@ -9,17 +9,9 @@ def debugWritefile(data,filename):
         f.write(data)
 
 def parse(filename):
-
     result = {}
-    result['In progress']={}
-    result['Patch Ready']={}
-    result['Patch Merged']={}
-    inProgress='In Progress'
     with open(filename) as f:
         begin = False
-        counter = False;
-        counterNum = 0
-        markLine = ''
         for l in f.readlines():
             r = l.split(INPUT_ARGS.seperator)
 
@@ -30,34 +22,49 @@ def parse(filename):
             else:
                 # status:
                 r = r[0:11]
-                # jiraid, failed number, comments
                 try:
                     status = r[9].strip()
-                except IndexError,e:
-                    print(l)
-                    continue
-                if not result.has_key(status):
-                    result[status]={}
-                    componment = r[8].strip()
-                    if not result[status].has_key(componment):
-                        result[status][componment]=[]
-                try:
-                    result[status][componment].append("%s %s. %s"%(r[7],r[6],r[-1].strip()))
-                except KeyError,e:
-                    print(status, componment)
+                    if(status == ''):
+                        continue
+                    else:
+                       if not result.has_key(status):
+                           result[status] = {}
+                    component = r[8].strip()
+                    if component != '':
+                        # jiraid, failed number, comments
+                        if result[status].has_key(component):
+                            result[status][component].append((r[7],r[6],r[-1].strip()))
+                        else:
+                            result[status][component] = []
+                            result[status][component].append((r[7],r[6],r[-1].strip()))
 
+                except IndexError,e:
+                    pass
 
         return result
 
 def output(result):
-    docxStr=''
-    for status, componments in result.items():
-        docxStr += "*%s\n"%status
-        for  componment, contents in componments.items():
-            docxStr += "**%s\n"%componment
-            for content in contents:
-                docxStr += "***%s\n" % content
 
+    print(len(result))
+    for key in result.keys():
+        print(key)
+
+    docxStr=''
+    for status, components in result.items():
+        if len(components)<2:
+            continue
+        statusStr = ''
+        sumFailed = 0
+        for  component, contents in components.items():
+            failedNumber = reduce(lambda x,y:x+y,[int(i[1]) for i in contents],0)
+            sumFailed += failedNumber
+            statusStr += "  %s %s.\n"%(component,str(failedNumber))
+            for id, fn, co in contents:
+                statusStr += "   %s.%s.%s\n" % (id, fn, co)
+
+        statusStr = ( " %s %s.\n" % (status, str(sumFailed))) + statusStr
+        docxStr += statusStr
+        
     with open(INPUT_ARGS.output_file,'w') as f:
         f.writelines(docxStr)
 

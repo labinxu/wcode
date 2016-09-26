@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
-import requests
 import mechanize
 import sys
+
 if sys.version_info[0]==3:
     from bs4 import BeautifulSoup
 else:
@@ -126,7 +126,8 @@ def parse(filename):
                 else:
                     r = r[0:11]
                     if len(r)<11:
-                        pass
+                        extendList = (len(r)-11) * ['']
+                        r.extend(extendList)
                     r = fixStatus(r)
                     r[-1] = r[-1].strip()
 

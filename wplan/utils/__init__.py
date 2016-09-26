@@ -7,3 +7,11 @@ def GetJiraId(text):
     if(ret == []):
         raise Exception('no jira id found!')
     return ret[0][1]
+
+
+class Args:
+    def __init__(self):
+        self.user = 'labinxu'
+        self.passwd = 'Sep@0909'
+        self.input_file=''
+
