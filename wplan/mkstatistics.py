@@ -2,11 +2,7 @@
 import mechanize
 import sys
 
-if sys.version_info[0]==3:
-    from bs4 import BeautifulSoup
-else:
-    import BeautifulSoup
-
+from bs4 import BeautifulSoup
 import utils
 
 # #######################
@@ -23,7 +19,7 @@ def login(user, passwd):
     br.set_handle_redirect(True)  
     br.set_handle_referer(True)  
     br.set_handle_robots(False)  
-    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)  
+    br.set_handle_frameworkrefresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)  
     br.set_debug_http(False)
     response = br.open('https://jira01.devtools.intel.com/login.jsp?os_destination=%2Fsecure%2FDashboard.jspa')
     br.select_form(nr=1)
@@ -42,13 +38,17 @@ def getComments(jiraId):
     print("Query %s" % jiraId)
     return parseHtml(data)
 
+def checkComments(comments):
+    for time, user, comment in comments.reverse():
+        print(time)
 
 def parseHtml(data):
-    attrs = {'class':"issue-data-block activity-comment twixi-block  expanded"}
+    #attr = {'class':"issue-data-block activity-comment twixi-block  expanded"}
+    attrs = {'class':"twixi-wrap verbose actionContainer"}
     soup = BeautifulSoup(data,'html.parser')
     commentsTag = soup.findAll('div',attrs=attrs)
     commentAttrs = {'class':'action-body flooded'}
-    comments = {}
+    comments = []
     for itemTag in commentsTag:
         user = itemTag.find('a', attrs={'class':"user-hover user-avatar"})
         user = user.text
@@ -56,12 +56,10 @@ def parseHtml(data):
         time = itemTag.find('time')
         time = time.text
 
-        content = itemTag.find('div',attrs={'class':"action-body flooded"})
-        content = content.text
-        if not comments.has_key(user):
-            comments[time]=[]
-
-        comments[time].append((user,content))
+        commentTag = itemTag.find('div',attrs={'class':"action-body flooded"})
+        comment = commentTag.find('p')
+        comment = comment.text
+        comments.append((time, user, comment))
 
     return comments
 
@@ -87,15 +85,8 @@ def parseComments(jiraId):
         content = GComments[jiraId]
     else:
         comments = getComments(jiraId)
-        content = doParseComment(comments)
         GComments[jiraId] = content
     return content
-
-
-def doParseComment(comments):
-    item = comments.items()[-1]
-    comment = item[-1][-1][-1]
-    return comment
 
 
 def fixStatus(r):

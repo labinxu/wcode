@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import utils
-
+from docx import Document
 # #######################
 INPUT_ARGS = ''
 
@@ -44,29 +44,36 @@ def parse(filename):
         return result
 
 def output(result):
-
-    print(len(result))
-    for key in result.keys():
-        print(key)
-
-    docxStr=''
+    document = Document()
+    document.add_heading('Document Tile',0)
     for status, components in result.items():
-        if len(components)<2:
+        failures = sumFailures(components)
+        if failures <= 0:
             continue
-        statusStr = ''
-        sumFailed = 0
-        for  component, contents in components.items():
-            failedNumber = reduce(lambda x,y:x+y,[int(i[1]) for i in contents],0)
-            sumFailed += failedNumber
-            statusStr += "  %s %s.\n"%(component,str(failedNumber))
-            for id, fn, co in contents:
-                statusStr += "   %s.%s.%s\n" % (id, fn, co)
 
-        statusStr = ( " %s %s.\n" % (status, str(sumFailed))) + statusStr
-        docxStr += statusStr
+        p = document.add_paragraph( "%s %s.\n" % (status, sumFailures(components)) ,style='ListBullet')
         
-    with open(INPUT_ARGS.output_file,'w') as f:
-        f.writelines(docxStr)
+        for  component, contents in components.items():
+
+            p = document.add_paragraph( "      %s %s.\n" % (component,sumComponentFailuress(contents)),
+                                        style='ListBullet')
+            for id, fn, co in contents:
+                p.add_hyperlink(text='        %s'%utils.GetJiraId(id),url='https://github.com')
+                p.add_run(text="        %s.%s\n" % (fn, co))
+
+    document.add_page_break()
+    document.save(INPUT_ARGS.output_file)
+
+def sumComponentFailuress(contents):
+    return reduce(lambda x,y:x+y ,[int(i[1]) for i in contents])
+
+def sumFailures(components):
+    sumFailures = 0
+    for  component, contents in components.items():
+        failedNumber = reduce(lambda x,y:x+y,[int(i[1]) for i in contents],0)
+        sumFailures += failedNumber
+
+    return sumFailures
 
 
 def cmdline(args=None):

@@ -20,6 +20,12 @@ class MkstatisticsTestCases(unittest.TestCase):
     def testCountRowFails(self):
         assert(4==mkstatistics.countRowFailuers(['Fail','Fail','Fail','Fail']))
 
+    def testComments(self):
+        comments = mkstatistics.parseHtml(open('../data/jira.html'))
+        print(comments)
+
+        date = '12/Sep/16 6:17 AM'
+
 if __name__ == '__main__':
     unittest.main()
 
