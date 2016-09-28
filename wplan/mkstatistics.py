@@ -39,11 +39,12 @@ def getComments(jiraId):
     print("Query %s" % jiraId)
     return parseHtml(data)
 
-def checkComments(comment):
-    if olderThan(comment[0],7):
-        return ASSIGNEE
-    else:
-        return 'In Progress'
+def checkComments(comments):
+    for comment in comments:
+        if olderThan(comment[0],7):
+            return ASSIGNEE
+        else:
+            return 'In Progress'
 
 def checkTime(time):
     #if it's between week
@@ -103,7 +104,8 @@ def parseComments(jiraId):
         content = GComments[jiraId]
     else:
         comments = getComments(jiraId)
-        GComments[jiraId] = content
+        comment = checkComments(comments)
+        GComments[jiraId] = comment
     return content
 
 
