@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 import mechanize
 import sys
-
+from datetime import datetime
 from bs4 import BeautifulSoup
 import utils
 
 # #######################
 INPUT_ARGS = ''
+ASSIGNEE=''
 
 def debugWritefile(data,filename):
     with open(filename,'w') as f:
@@ -38,29 +39,46 @@ def getComments(jiraId):
     print("Query %s" % jiraId)
     return parseHtml(data)
 
-def checkComments(comments):
-    for time, user, comment in comments.reverse():
-        print(time)
+def checkComments(comment):
+    if olderThan(comment[0],7):
+        return ASSIGNEE
+    else:
+        return 'In Progress'
+
+def checkTime(time):
+    #if it's between week
+    pass
+
+def olderThan(time, days):
+    deltatime = datetime.now() - time
+    if deltatime.days- days > 0:
+        return True
 
 def parseHtml(data):
+    global ASSIGNEE
+    soup = BeautifulSoup(data,'html.parser')
+
+    # find Assignee
+    assigneeTag = soup.find('span',attrs={'id':"assignee-val"})
+    ASSIGNEE = assigneeTag.find('span',attrs={'class':"user-hover"}).text.strip()
     #attr = {'class':"issue-data-block activity-comment twixi-block  expanded"}
     attrs = {'class':"twixi-wrap verbose actionContainer"}
-    soup = BeautifulSoup(data,'html.parser')
+
     commentsTag = soup.findAll('div',attrs=attrs)
     commentAttrs = {'class':'action-body flooded'}
-    comments = []
+
+    comments =[]
     for itemTag in commentsTag:
         user = itemTag.find('a', attrs={'class':"user-hover user-avatar"})
         user = user.text
 
-        time = itemTag.find('time')
-        time = time.text
+        timeTag = itemTag.find('time')
+        timeText = datetime.strptime(timeTag['datetime'], "%Y-%m-%dT%H:%M:%S+%f")
 
         commentTag = itemTag.find('div',attrs={'class':"action-body flooded"})
         comment = commentTag.find('p')
-        comment = comment.text
-        comments.append((time, user, comment))
-
+        comment = comment.text.strip('\n\r\t')
+        comments.append((timeText, user, comment))
     return comments
 
 

@@ -2,6 +2,7 @@
 
 import unittest
 import mkstatistics
+from datetime import datetime
 
 class Param:
     def __init__(self):
@@ -22,9 +23,9 @@ class MkstatisticsTestCases(unittest.TestCase):
 
     def testComments(self):
         comments = mkstatistics.parseHtml(open('../data/jira.html'))
-        print(comments)
+        for comment in comments[::-1]:
+            print(mkstatistics.checkComments(comment))
 
-        date = '12/Sep/16 6:17 AM'
 
 if __name__ == '__main__':
     unittest.main()
