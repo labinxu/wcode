@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+#!/usr/bin/env python
 
 import re
 INPUT_ARGS = ''
@@ -39,7 +39,7 @@ def getJiraId(text):
     pattern = re.compile("(https://jira01.devtools.intel.com/browse/)(OAM-\d{5})")
     ret  = pattern.findall(text)
     if(ret == []):
-        raise Exception('no jira id found!')
+        return text.strip()
     return ret[0][1]
 
 
@@ -48,9 +48,8 @@ def parseJiraIds(jiraIds):
 
 
 def shouldTest(jiraId,jiraIds):
-    if(jiraIds == ''):
+    if(jiraId == ''):
         return True
-
     return jiraId != '' and jiraId.lower() in jiraIds
 
 
@@ -60,7 +59,9 @@ def parse(filename):
         begin = False
         module = ''
         jiraId = ''
-        jiraIds = ''
+        if INPUT_ARGS.jiraids != None:
+            jiraIds = parseJiraIds(INPUT_ARGS.jiraids)
+        print(jiraIds)
         for l in f.readlines():
             r = l.split(INPUT_ARGS.seperator)
             ##########################################
@@ -70,27 +71,17 @@ def parse(filename):
                     begin = True
                 continue
 
-                # juge the jiraids
-            if(INPUT_ARGS.jiraids != None):
-                jiraIds = parseJiraIds(INPUT_ARGS.jiraids)
-
-            r = r[0:8]
+            r = r[0:INPUT_ARGS.cut_column]
 
             # jira ticket
             if(r[-1].strip() != ''):
-                try:
-                    jiraId = getJiraId(r[-1].strip())
-                except Exception,e:
-                    pass
-                finally:
-                    pass
-
-            if(not shouldTest(jiraId, jiraIds)):
-                continue
+                jiraId = getJiraId(r[-1].strip())
 
             if(r[0].strip() != ''):
                 module = r[0].strip()
-
+                print(module)
+            if(not shouldTest(jiraId, jiraIds)):
+                continue
             # not test
             if(r[1].strip() == ''):
                 continue
@@ -98,6 +89,7 @@ def parse(filename):
             rret=[]
             ##### check result
             # add module
+
             rret.append(module)
             # add testcase
             rret.append(r[1].strip())
@@ -116,14 +108,14 @@ def output_plan(result):
     xmlhead += '<configuration description="Runs failures in %s"/>\n' % INPUT_ARGS.output_file
     xmlhead += ' '*4+'<include name="%s"/>\n' % INPUT_ARGS.test_type
     f.write(xmlhead)
-    xmlFormat = ' '*4 + '<option name="%s" value="%s"/>\n'
+    xmlFormat = ' '*4 + '<option name="%s" value="%s %s"/>\n'
     for jiraid, caseset in result.items():
         string = ''
         for case_content in caseset:
             casestr=''
             if(len(case_content) !=2 ):
                 continue
-            xmlStr = xmlFormat % (case_content[0], case_content[1])
+            xmlStr = xmlFormat % ("compatibility:include-filter" ,case_content[0], case_content[1])
             f.write(xmlStr)
 
     xmlStr = '</configuration>'
@@ -134,6 +126,11 @@ def cmdline():
     global INPUT_ARGS
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('-c','--cut', action='store',
+                        dest="cut_column",
+                        default=8,
+                        type=int,
+                        help='cut column index')
     parser.add_argument('-j', '--jiraid', action="store",
                         dest='jiraids',
                         default=None,
