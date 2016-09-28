@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import re
+import os
 INPUT_ARGS = ''
 
 def get_abi_to_test(argument):
@@ -50,6 +51,7 @@ def parseJiraIds(jiraIds):
 def shouldTest(jiraId,jiraIds):
     if(jiraId == ''):
         return True
+
     return jiraId != '' and jiraId.lower() in jiraIds
 
 
@@ -59,9 +61,10 @@ def parse(filename):
         begin = False
         module = ''
         jiraId = ''
+        jiraIds = []
         if INPUT_ARGS.jiraids != None:
             jiraIds = parseJiraIds(INPUT_ARGS.jiraids)
-        print(jiraIds)
+            print(jiraIds)
         for l in f.readlines():
             r = l.split(INPUT_ARGS.seperator)
             ##########################################
@@ -80,8 +83,10 @@ def parse(filename):
             if(r[0].strip() != ''):
                 module = r[0].strip()
                 print(module)
-            if(not shouldTest(jiraId, jiraIds)):
-                continue
+
+            if(jiraIds != []):
+                if(not shouldTest(jiraId, jiraIds)):
+                    continue
             # not test
             if(r[1].strip() == ''):
                 continue
@@ -101,12 +106,15 @@ def parse(filename):
         # display
         return result
 
+def get_file_name(path):
+    return os.path.split(path)[1]
 
 def output_plan(result):
     f = open(INPUT_ARGS.output_file, 'wr')
     xmlhead = '<?xml version="1.0" encoding="utf-8"?>\n'
     xmlhead += '<configuration description="Runs failures in %s"/>\n' % INPUT_ARGS.output_file
     xmlhead += ' '*4+'<include name="%s"/>\n' % INPUT_ARGS.test_type
+    xmlhead += ' '*4+'<option name="compatibility:plan" value=%s />\n' % get_file_name(INPUT_ARGS.output_file)
     f.write(xmlhead)
     xmlFormat = ' '*4 + '<option name="%s" value="%s %s"/>\n'
     for jiraid, caseset in result.items():
