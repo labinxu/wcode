@@ -1,0 +1,18 @@
+* *makefile synatex learn*
+** conditions
+*** if ifeq ifnqe ifdef / endif endif endif endef
+
+** function invoke 
+*** $(<function> <arguments>) or ${<function> <arguments>}
+** *functions*
+*** $(subst <from>, <to>,<text>) # replace the characters from by to in text
+*** $(patsubst <pattern>,<replacement>,<text>) # pattern replace
+*** $(strip <string>) # remve the spaces that at front and end.
+*** $(findstring <find>,<in>) # find <find> from <in>
+*** $(filter <pattern>,<text>) # get the text that matched the pattern
+*** $(filter-out <pattern>,<text) # opposites the function filter
+*** $(sort <list>)
+*** $(word <n>,<text>) # get the word at n in text.
+*** $(wordlist <s>,<e>,<text> # get the word list from s to e in text.
+*** ($words <text>) # count the number of word.
+
