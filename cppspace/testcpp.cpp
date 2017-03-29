@@ -11,7 +11,7 @@ public:
   static T* getInstance()
   {
 
-    if(instance==NULL)
+    if(instance == NULL)
       {
         instance = new T();
       }
@@ -40,15 +40,27 @@ int main()
   t->display();
   //TestSingleton *t2 = new TestSingleton();
   //t2->display();
-  return 1;
+  //return 1;
   char pc[] = "abc.cdb.edf";
-  for(auto c:pc){
+
+  // variable
+  for(auto c: pc){
     if(c == '.'){
       c='/';
     }
   }
+
+  // reference will change the value
+  for(auto &c: pc)
+  {
+      if(c == '.')
+      {
+          c='/';
+      }
+  }
   std::cout<<pc<<std::endl;
 
+  // reference change the value
   for_each(pc, pc+strlen(pc), [](char& c){
       if(c=='.'){
         c='/';
