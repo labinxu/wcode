@@ -9,7 +9,7 @@ var1="value2" # error: This variable is read only
 *** remove variable ( unset variable_name)
 *** string
 **** join string
-youname="name"
+     youname="name"
 fullname="you "$(youname)" !"
 **** get string length
 string="abcd"
@@ -18,32 +18,3 @@ echo $(#string) # 4
 string="runoob is a great site"
 echo $(string:1:4) # unoo,  begin 1,number 4
 echo `expr index $string is` # output 8.  find string "is" in string
-** array
-*** arrayname=(item0,i1,i2)
-arrayname[0]=val
-echo ${arrayname[0]} # get item from array
-echo ${arrayname[@]} # get the whole items
-length=${#arrayname[@]} or length=${arrayname[*]} # get the length of array
-
-** arithmetic
-*** echo "expr 1 + 2" # output expr 1 + 2
-*** echo `expr 1 + 2` # output 3,, there must have spaces to saperate the '+'
-** exit status
-*** $? special the status of exit . zero is success others are failed
-** read input
-read name
-echo "hello $name"
-** wild cards
-   * ? [a-z] [!a] [^a]
-** commands
-sort < sname > sorted
-tr "[a-z]" "[A-Z]" < sname > cap_names # cap the content
-sort > new_sorted < cap_names # another sort type
-echo 1 + 2 | bc # bc commander calculate the 1+2
-cat > showfile # input code to showfile use cat command
-# Ctrl + d to save
-
-** filter
- tail -n10 < sname | head -n3 >new_list
- sort < sname | uniq > u_name
- 
