@@ -16,19 +16,19 @@ done
 # function define
 function chessboard ()
 {
-    for (( i = 1; i <= 9; i++ ))
+    for (( i = 1; i <= 3; i++ ))
     do
-        for (( j = 1; j <= 9; j++ ))
+        for (( j = 1; j <= 3; j++ ))
         do
             tot=`expr $i + $j`
             tmp=`echo $tot % 2 | bc` # `expr $tot % 2`
             if [ $tmp -eq 0 ]; then
-                echo -e -n "\033[47m "
+                echo -e -n "033[47m "
             else
-                echo -e -n "\033[40m "
+                echo -e -n "033[40m "
             fi
         done
-        echo -e -n "\033[40m"
+        echo -e -n "033[40m"
         echo ""
     done
 }
@@ -51,3 +51,19 @@ function casedemo()
 
 echo "for case demo"
 casedemo car
+
+
+function IORedirection()
+{
+    if [ $# -ne 2 ]; then
+        echo "Error: number are not supplied"
+        echo "Usage: $0 number1 number2"
+        exit 1
+    fi
+    ans=`expr $1 + $2`
+    echo "Sum is $ans"
+}
+
+echo "IO redirection demo"
+#IORedirection # error print
+IORedirection 2 4
