@@ -204,7 +204,7 @@ def output(result):
                 rowstr += rowFormat % cell
         table.append(rowstr+'\n')
 
-    with open(INPUT_ARGS.output_file,'w') as f:
+    with open(INPUT_ARGS.output_file, 'w') as f:
         f.writelines(table)
 
 
@@ -216,7 +216,7 @@ def cmdline(args=None):
     if(args != None):
         return parser.parse_args(args)
 
-    parser.add_argument('-u','--user',
+    parser.add_argument('-u', '--user',
                         action='store',
                         dest='user',
                         help='user to login')

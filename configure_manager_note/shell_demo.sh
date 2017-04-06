@@ -55,6 +55,10 @@ casedemo car
 
 function IORedirection()
 {
+    echo 'Usage:'
+    echo "$0 > 5 5"
+    echo "$0 1 > &2"
+
     if [ $# -ne 2 ]; then
         echo "Error: number are not supplied"
         echo "Usage: $0 number1 number2"
