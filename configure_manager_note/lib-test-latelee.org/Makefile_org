@@ -1,0 +1,68 @@
+#################################################################
+# A simple Makefile
+# By Late Lee(http://www.latelee.org)
+
+# 
+# bugs:
+#      1. 需要显式指定库位置、名称；
+#      2. make 及 make clean处理得不好(对于库，要么删除再编译，要么无操作)；
+##################################################################
+
+CC=gcc
+CFLAGS = -Wall
+DEBUG = y
+
+ifeq ($(DEBUG), y)
+CFLAGS += -g
+else
+CFLAGS += -O2
+endif
+
+SUBDIRS := foo bar bt
+
+LIBS := bt/libbt.a foo/libfoo.a bar/libbar.a
+
+LDFLAGS = $(LIBS)
+
+RM = -rm -rf
+
+__OBJS = main.o
+__OBJS += example.o
+
+__SRCS = $(subst .o,.c,$(__OBJS))
+
+target = a.out
+
+MAKE = make
+
+#all: clean $(target)
+all: $(target)
+
+$(__OBJS): $(__SRCS)
+	$(CC) $(CFLAGS) -c $^ -I ./configs/
+
+# 这种格式也可以
+#.c.o:
+#%.o: %.c
+#	$(CC) $(CFLAGS) -c $^ -I ./configs/
+#********************************************
+#%.o: %.c
+#	$(CC) $(CFLAGS) -c $^ -I ./configs/
+#********************************************
+# 可单独：
+#main.o: main.c
+#	$(CC) $(CFLAGS) -c $^ -I ./configs/
+#example.o: example.c
+#	$(CC) $(CFLAGS) -c $^ -I ./configs/
+
+$(target): $(__OBJS)
+	for dir in $(SUBDIRS); \
+	do $(MAKE) -C $$dir all || exit 1; \
+	done
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+clean:
+	@for dir in $(SUBDIRS); do make -C $$dir clean|| exit 1; done
+	$(RM) $(__OBJS) $(target) *.bak *~
+
+.PHONY: all clean
