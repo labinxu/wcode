@@ -67,7 +67,53 @@ function IORedirection()
     ans=`expr $1 + $2`
     echo "Sum is $ans"
 }
+function readfile()
+{
+    echo "=========================="
+    echo "read $0"
+    while read line
+    do
+        result=`echo ${line} |grep "readfile"`
+        if [[ ${result} != "" ]]; then
+            echo "call the function: ${line}"
+        else
+            continue
+        fi
+    done < $0
+}
+
+function foreachArray()
+{
+    echo "=========================="
+    echo "foreach the array"
+    array="a b c"
+    for item in ${array};
+    do
+        echo ${item}
+    done
+}
+
+#function handleOption()
+#{
+    echo "================="
+    echo "handle option args"
+    while getopts "v:p:hu:" optname
+    do
+        case "$optname" in
+            "v")
+                echo "Option $optname have value $OPTARG"
+                ;;
+            "h")
+                echo "Option $optname have value $OPTARG"
+                ;;
+        esac
+        echo "OPTIND is now $OPTIND"
+    done
+#}
 
 echo "IO redirection demo"
 #IORedirection # error print
 IORedirection 2 4
+readfile
+foreachArray
+# handleOption
