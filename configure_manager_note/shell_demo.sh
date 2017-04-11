@@ -93,11 +93,11 @@ function foreachArray()
     done
 }
 
-#function handleOption()
-#{
+function handleOption()
+{
     echo "================="
     echo "handle option args"
-    while getopts "v:p:hu:" optname
+    while getopts "v:p:h:u:" optname
     do
         case "$optname" in
             "v")
@@ -109,11 +109,32 @@ function foreachArray()
         esac
         echo "OPTIND is now $OPTIND"
     done
-#}
+}
+function seddemo()
+{
+    echo '========================================='
+    echo 'sed command demo'
+    cat $0 -n | sed -n '1,3p' #print line1-line3
+    cat $0 -n | sed -n '1~2p' #print line (1,3,5,...)
+    cat $0 -n | sed -n '1!d'
+    # s search and replace
+    # '[address]s/pattern/replacement/flags'
+    # flags : g full repace, p print ,w saveas
+    # cat gbkdemo.txt -n | sed -n '5s/line/nine/p'
+    cat $0 -n | sed -n '1!d'
+    # save as to saveas
+    cat gbkdemo.txt -n | sed -n 's/line/nine/gw ./saveas'
+    sed 's/^.//1' gbkdemo.txt # remove first char from lines
+    sed '1i hello' gbkdemo.txt # insert hello front the line 1
+    sed '1a hello' gbkdemo.txt # insert hello back the line 1
+    echo "loveablelove" | sed 's/\(love\)able/\1=' #
+    echo "10100010" | sed 's#10#100#g' # replace 10 to 100
+}
 
 echo "IO redirection demo"
 #IORedirection # error print
 IORedirection 2 4
 readfile
 foreachArray
-# handleOption
+handleOption
+seddemo

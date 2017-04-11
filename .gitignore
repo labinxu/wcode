@@ -3,3 +3,6 @@ out/*
 *.pyc
 *.py~
 *.xml
+*.o
+*.a
+*/out/
