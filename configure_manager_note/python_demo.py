@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-#import mechanize
+# import mechanize
+
 import commands
 
 lsoutput = commands.getoutput('ls')
