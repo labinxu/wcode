@@ -70,7 +70,7 @@ function IORedirection()
 function readfile()
 {
     echo "=========================="
-    echo "read $0"
+    echo "read $1"
     while read line
     do
         result=`echo ${line} |grep "readfile"`
@@ -79,7 +79,7 @@ function readfile()
         else
             continue
         fi
-    done < $0
+    done < $1
 }
 
 function foreachArray()
@@ -114,6 +114,15 @@ function seddemo()
 {
     echo '========================================='
     echo 'sed command demo'
+    text="This is my cat
+    my cat's name is betty
+This is my dog
+  my dog's name is frank
+    This is my fish
+    my fish's name is george
+This is my goat
+  my goat's name is adam"
+
     cat $0 -n | sed -n '1,3p' #print line1-line3
     cat $0 -n | sed -n '1~2p' #print line (1,3,5,...)
     cat $0 -n | sed -n '1!d'
@@ -124,11 +133,64 @@ function seddemo()
     cat $0 -n | sed -n '1!d'
     # save as to saveas
     cat gbkdemo.txt -n | sed -n 's/line/nine/gw ./saveas'
+    cat gbkdemo.txt -n | sed -e '1d;3d'
     sed 's/^.//1' gbkdemo.txt # remove first char from lines
     sed '1i hello' gbkdemo.txt # insert hello front the line 1
     sed '1a hello' gbkdemo.txt # insert hello back the line 1
-    echo "loveablelove" | sed 's/\(love\)able/\1=' #
+    echo "loveablelove" | sed 's/\(love\)able/\1=/' #
     echo "10100010" | sed 's#10#100#g' # replace 10 to 100
+
+    echo $text | sed "s/my/LBX's/g"
+    echo "[*] insert '#' into front of line: "
+    echo ${text} | sed 's/^/#/g'
+    echo "[*] append --- into back of line: "
+    echo $text | sed 's/$/ --- /g'
+
+    html='<b>This</b> is what <span style="text-decoration: underline;">I</span> meant. Understand?'
+    echo "[*] remove tags from html"
+    echo $html | sed 's/<[^>]*>//g' # [^>] 代表除了>以外的所有字符
+    echo "[*] line replace"
+    echo $text | sed "3s/my/LBX's/g"
+    echo "[*] repace each line first char 's'"
+    echo $text | sed "s/s/S/1"
+    echo $text | sed "s/s/S/2g" # 第二个以后的全部替换
+    echo "[*] 1-3 repalce and 3-$ another replace"
+    echo $text | sed '1,3s/my/firstreplace/g;3,$s/my/otherreplace/g'
+    echo "[*] & is the variable"
+    echo $text | sed 's/my/[&]/g'
+}
+
+
+function stringdemo()
+{
+    echo "============================="
+    echo "stringdemo:"
+    strA="long string"
+    strB="string"
+    if [[ $strA =~ $strB ]];
+    then
+        echo "strA(${strA}) include StrB(${strB})"
+    else
+        echo "strA(${strA}) not include StrB(${strB})"
+    fi
+
+    echo "using grep to judge string include"
+    result=$(echo $strA | grep ${strB})
+    if [[ $result != "" ]];
+    then
+        echo "strA(${strA}) include StrB(${strB})"
+    fi
+}
+
+
+function awkdemo()
+{
+    echo "========================="
+    echo "awk demo:"
+    echo `last -n 5 | awk '{print $1}'`
+    cat /etc/passwd | awk -F: '/git/{print $1}'
+    #
+    awk -F: 'BEGIN {print "Begin"} /git/{print $1} END {print "End"}' /etc/passwd
 }
 
 echo "IO redirection demo"
@@ -138,3 +200,5 @@ readfile
 foreachArray
 handleOption
 seddemo
+stringdemo
+awkdemo
