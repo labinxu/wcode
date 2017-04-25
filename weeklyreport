@@ -1,0 +1,44 @@
+Hi Jarry.
+
+There is the summary of my main work from 4.19
+
+1.
+1.1 Last week My major work is apply  the permissions for work . and the importance is OptiCM6 training and the UNIX account apply.
+1.2  have a training for badge from https://intel.sabacloud.com/Saba/Web_spf/NA2PRD0003/local .
+        And jin chenX tell me the badge will soon come, maybe tomorrow.
+
+
+2.
+ 4.24-4.25
+  My main work is setup the compile environment for opticm6 on development host. And today the environment looks good  it can works now.
+
+3. details
+4.24 
+ According to the wiki (https://wiki.ith.intel.com/display/IMCIT/New+Linux+User+Shell+Environment)
+Setup the USE for host 
+
+Issues: enter_oc6 cannot work property
+Solution: Install the ION manager from the Intel software market, and use it create a new VNC session,,
+login the unix system and use command line : enter_oc6 -i to apply a new host.
+responsible persion: M, NageshX  .
+ticket approve person:  Yoel Buenavista, AntonX 
+
+4.25
+1.  Orientation the compile environment and do practice with(https://sp2010.ger.ith.intel.com/sites/XMM7360/XMM7360_Build_Instructions/Home.aspx)
+Issues:  find I have no permission for  two repositories : 1. modem/securityfwk/ceu_secure  2. modem/external/3p_ice_src
+Solution: rise a new apply for project 3p_ice_src,
+The project ceu_secure had been denied.
+Reason for denial: 
+We are not allowed to expose security code unless there is a specific business need. You are not required to have access to ceu_secure to build and use the system. Please submit a new request if you believe you have specific usecase that requires access to this source code.
+
+2. Assistance Ren, HuilingX to check the permissions.
+
+
+Next step:
+Continue familiar with the environment and do the next practices
+
+That’s all,
+
+
+Br
+Labin.xu
