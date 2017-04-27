@@ -1,0 +1,350 @@
+
+
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="shortcut icon" href="/static/images/oc6-favicon.png" />
+    <link rel="stylesheet" href="/static/intel-style/css/pure.0.2.0.css" />
+    <link rel="stylesheet" href="/static/bootstrap-3.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/bootstrap-3.3.2/docs/assets/css/docs.min.css" />
+    <link rel="stylesheet" href="/static/it-mlaf-css-master/css/it-mlaf.min.css" />
+    <link rel="stylesheet" href="/static/intel-style/css/listview.css" />
+    <link rel="stylesheet" href="/static/css/introjs.min.css" />
+    <link rel="stylesheet" href="/static/css/spinner.css" />
+    <link rel="stylesheet" href="/static/css/site.css" />
+    <link rel="stylesheet" href="/static/css/tabbable.css" />
+    <link rel="stylesheet" href="/static/css/scrollable.css" />
+    <link rel="stylesheet" href="/static/datatables/datatables.min.css" />
+    
+    
+    
+    <!--[if !IE]>-->
+    <script type="text/javascript" src="/static/js/jquery-2.1.1.min.js"></script>
+    <!--[endif]-->
+
+    <!--[if gte IE 9]>-->
+    <script type="text/javascript" src="/static/js/jquery-2.1.1.min.js"></script>
+    <!--[endif]-->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]> -->
+      <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+      <script src="/static/js/modernizr.min.js"></script>
+      <script src="/static/js/html5shiv.min.js"></script>
+      <script src="/static/js/respond.min.js"></script>
+    <!--[endif]-->
+
+    
+    
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/modal.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/transition.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/collapse.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/tooltip.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/popover.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/button.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/tab.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.2/js/dropdown.js"></script>
+    <script type="text/javascript" src="/static/intel-style/js/libs/mlafv1.js"></script>
+    <script type="text/javascript" src="/static/intel-style/js/site.js"></script>
+    <script type="text/javascript" src="/static/js/site.js"></script>
+    <script type="text/javascript" src="/static/js/navigation.js"></script>
+    <script type="text/javascript" src="/static/js/intro.min.js"></script>
+    <script type="text/javascript" src="/static/js/moment.min.js"></script>
+    <script type="text/javascript" src="/static/js/moment-timezone-with-data.min.js"></script>
+    <script type="text/javascript" src="/static/js/ajax.js"></script>
+    <script type="text/javascript" src="/static/js/utils.js"></script>
+    <script type="text/javascript" src="/static/js/jstorage.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.timeago.js" ></script>
+    <script type="text/javascript" src="/static/datatables/datatables.min.js"></script>
+    <script type="text/javascript" src="/static/angularjs/angular.min.js"></script> 
+    <script type="text/javascript" src="/static/angularjs/ui-bootstrap-tpls-1.3.3.min.js"></script> 
+    <script type="text/javascript" src="/static/angularjs/ui-bootstrap.min.js"></script> 
+    
+    
+    
+
+    <title>
+    Login
+    </title>
+</head>
+<body>
+<script>var TIME_ZONE = "UTC";</script>
+<header class="navbar-intel-alt simple-shadow">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse navbar-responsive-collapse">
+            <ul id="left-side-top-menu" class="nav navbar-nav" role="tablist">
+              
+
+<li>
+    <a href="/" class="navbar-brand text-center">
+        <img src="/static/images/OC6-logo-small.png" /> 
+    
+    
+    </a>
+</li>
+
+
+
+            </ul>
+            <ul id="right-side-top-menu" class="nav navbar-nav navbar-right" role="tablist">
+              
+
+
+
+<li class="dropdown hidden-sm hidden-xs">
+  <a class="pointer dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Project Overview<span class="caret"></span></a>
+  <ul class="dropdown-menu" role="menu">
+     <li><a href="/dashboard">
+        <span class="intelicon-medium intelicon-task"></span>
+        Dashboard</a></li>
+     <li><a href="/releases">
+        <span class="intelicon-medium intelicon-software"></span>
+        Recent Releases</a></li>
+     <li><a href="/hartsfe">
+        <span class="intelicon-medium intelicon-search-stack-solid"></span>
+        HARTS Summary</a></li>
+  </ul>
+</li>
+<li class="dropdown hidden-sm hidden-xs">
+  <a class="pointer dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Processes<span class="caret"></span></a>
+  <ul class="dropdown-menu" role="menu">
+     <li><a href="/bender">
+        <span class="intelicon-medium intelicon-bookmarks-outlined"></span>
+        Engineering Build</a></li>
+     <li><a href="/bender/flexo">
+        <span class="intelicon-medium intelicon-tap"></span>
+        Flexo 
+        </a></li>
+     <li><a href="/prsvg">
+        <span class="intelicon-medium intelicon-network"></span>
+        PRSVG 2.0
+        </a></li>
+  </ul>
+</li>
+<li class="dropdown hidden-sm">
+  <a class="pointer dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Tools <span class="caret"></span></a>
+  <ul class="dropdown-menu" role="menu">
+     <li><a href="/mani">
+        <span class="intelicon-medium intelicon-group"></span>
+        Diff Tool</a></li>
+     <li><a href="/dtcloud">
+        <span class="intelicon-medium intelicon-partially-sunny-outlined"></span>
+        MFT Cloud</a></li>
+     <li><a href="/timeline">
+        <span class="intelicon-medium intelicon-calendar-outlined"></span>
+        Timeline</a></li>
+     <li><a href="/triggers/">
+        <span class="intelicon-medium intelicon-meeting"></span>
+        Triggers</a></li>
+     <li><a href="/ops/">
+        <span class="intelicon-medium intelicon-activity-outlined"></span>
+        Op dashboards</a></li>        
+     <li><a href="/utpsearch/">
+        <span class="glyphicon glyphicon-console"></span>
+        UTP Search</a></li>             
+     <li><a href="/limits/">
+        <span class="intelicon-medium intelicon-growth-increase"></span>
+        Warning Limits</a></li>             
+     
+     
+  </ul>
+</li>
+<li>
+    <a href="/search" class="search" data-toggle="popover" data-placement="bottom" title="Search">
+        <i id="search-icon" class="intelicon-search intelicon intelicon-medium"></i>
+    </a>
+</li>
+<li>
+    <a role="button" class="pointer profile-labs" data-toggle="popover" data-placement="bottom" title="OC6WEB versions in development">
+        <i class="intelicon-lab intelicon intelicon-medium text-muted"></i>
+    </a>
+</li>
+<li>
+    <a role="button" class="pointer profile-alerts" data-toggle="popover" data-placement="bottom" title="Announcements and Releases">
+        <i id="notifications-indicator" class="intelicon-announcements-solid intelicon intelicon-medium text-muted"></i>
+        <span id="notifications-counter" class="small label label-danger hidden">0</span>
+    </a>
+</li>
+
+<li>
+    <a href="/login?next=/login?next=/">
+        Login
+    </a>
+</li>
+
+
+
+            </ul>
+        </div>
+    </div>
+</header>
+
+<div class="body-box-wrapper container-fluid">
+
+  <nav class="col-md-2 body-nav" id="body-nav">
+    
+    
+  </nav>
+    <script>
+      $("#body-nav a").click(function(ev) { 
+          $("#body-nav li").removeClass("active"); 
+          $(this.parentNode).addClass("active"); 
+      });
+
+      $(function() {
+        if (window.location.hash) {
+            x = window.location.hash.match(/#(.*)\/(.*)/);
+            if (x) {
+                id = '#' + x[1] + ' a[data-target=' + x[2] + ']';
+                $(id).click();
+            }
+        }
+      });
+    </script>
+  <div class="col-md-10 body-box">
+    
+<div class="intel-box col-md-4 col-md-offset-3">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <span class="glyphicon glyphicon-lock"></span> Please login</div>
+        <div class="panel-body">
+            
+            <form class="form-horizontal" role="form" action="/login" method="post">
+            <input type='hidden' name='csrfmiddlewaretoken' value='BkkGrr60AQxMcKsBtgL4VQHVtT4WeueS' />
+            <input type="hidden" name="next" value="/" />
+            <div class="form-group">
+                <label for="username" class="col-sm-3 control-label">
+                    Username</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="username" placeholder="james" autocomplete="off" default="" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password" class="col-sm-3 control-label">
+                    Password</label>
+                <div class="col-sm-9">
+                    <input type="password" class="form-control" name="password" placeholder="Password" autocomplete="off" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"/>
+                            Remember me
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group last">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button type="submit" class="btn btn-success btn-sm">Sign in</button>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+    <div class="alert alert-info">
+        If you are experiencing <b>login problems</b> please remove your cookies for this website and try again.
+        <br /><br />
+        There is no need to request access via EAM or any other tool. If you are an employee of Intel you are permitted to login.
+    </div>
+</div>
+
+
+  </div>
+  
+
+<div class="col-md-12 body-footer">
+  <div class="col-md-offset-2 col-md-4 hidden-sm hidden-xs">
+    <ul class="bs-docs-footer-links text-muted">
+      <li><i class="intelicon intelicon-medium intelicon-support-services"></i> 
+          <a target="_blank" href="http://it.intel.com/#/topic/858">Contact support</a>
+      </li>
+      <li>&emsp;</li>
+      <li><i class="intelicon intelicon-medium intelicon-fellow-traveler"></i> 
+          <a href="mailto:dl-opticm6-webfe@intel.com?subject=Feedback%20on%20OC6%20Web-Frontend">Give feedback</a>
+      </li>
+      
+      <!-- browser tracedebug output -->
+      
+      
+    </ul>
+  </div>
+  <div class="col-md-6 hidden-sm hidden-xs">
+    <ul class="bs-docs-footer-links text-muted pull-right">
+      <li>Further resources</li>
+      <li>&middot;</li>
+      <li><a target="_blank" href="https://wiki.ith.intel.com/display/opticm6/">Wiki</a> </li>
+      <li>&middot;</li>
+      <li><a target="_blank" href="https://soco.intel.com/groups/opticm6">Forum</a> </li>
+      <li>&middot;</li>
+      <li><a target="_blank" href="https://wiki.ith.intel.com/display/opticm6/Tools">Other Tools</a> </li>
+    </ul>
+  </div>
+</div>
+
+
+
+</div>
+
+
+
+<!-- Inlude App Usage Tracking -->
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="/piwik/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+
+    _paq.push(['setSiteId', 1]);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="/piwik/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
+<!-- End Piwik Code -->
+
+<!-- Intel Tracking (via http://appusage.intel.com) -->
+<script type="text/javascript">
+(function(d, URL, IapID, Env, s_) {
+    s_ = d.createElement('script');
+    s_.async = 1;
+    s_.src = URL + '/' + IapID + (Env ? '?environment=' + Env : '');
+    d.body.appendChild(s_);
+})(document, '//appusage.intel.com/Service/api/LogUser', '13309');
+
+</script>
+<!-- End Intel Tracking -->
+
+<script>
+function removeTrackingFromHash() {
+    var keys = ['pk_campaign', 'pk_kwd'];
+    var hash = window.location.hash;
+    if (!hash) return;
+    for (var i=0; i<keys.length; i++) {
+        var k = keys[i];
+        if (hash.indexOf(k)) {
+            var r = new RegExp(k + "=[\\w+\\-\\.]+&?")
+            hash = hash.replace(r, '');
+        }
+    }
+    if (hash != window.location.hash) {
+        if (hash == '#') hash = '';
+        window.location.hash = hash;
+    }
+}
+removeTrackingFromHash();
+</script>
+
+
+
+<!-- Preload images //-->
+<img class="hidden" src="/static/images/pac-man-spinner.gif" />
+</body>
+</html>
