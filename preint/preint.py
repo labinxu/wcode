@@ -1,3 +1,10 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+@author LBX
+copyright
+"""
 
 from utils.utils import Browser
 
@@ -11,6 +18,12 @@ headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20
                'Accept-Encoding': 'gzip, deflate'
            }
 def check_login(response):
+    """
+    @param: response submit login response
+    @param: 
+    @return: None
+    @raise exception: 
+    """
     if(response.find('logou') != -1):
         return True
     else:
@@ -33,18 +46,23 @@ def login(username, password):
     status, browser = login_preint(username, password)
     if status:
         print('login successful')
-        
+
 def get_diff_tags():
-         browser = Browser()
-        
-        PIT_PUBLISHER_URL = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM-PIT_PUBLISHER/'
-        browser.open(PIT_PUBLISHER_URL)
-        pit_publisher_tag = browser.find('div',{'class':'pane desc indent-multiline'})
-        
-        NONPRSVG_PIT_PUBLISHER_URL = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM_NONPRSVG_PIT_PUBLISHER/'
-        browser.open(NONPRSVG_PIT_PUBLISHER_URL)
-        nonprsvg_pit_publisher_tag = browser.find('div',{'class':'pane desc indent-multiline'})
-        
-        
+    """
+    get the different about PIT publisher and nonprsvg publisher
+    """
+
+    browser = Browser()
+    pit_publisher_url = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM-PIT_PUBLISHER/'
+    browser.open(pit_publisher_url)
+    pit_publisher_tag = browser.find('div',{'class':'pane desc indent-multiline'})
+    pit_version = pit_publisher_tag.label()
+    print('pit version : %s' % pit_version)
+    nonprsvg_pit_publisher_url = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM_NONPRSVG_PIT_PUBLISHER/'
+    browser.open(nonprsvg_pit_publisher_url)
+    nonprsvg_pit_publisher_tag = browser.find('div', {'class': 'pane desc indent-multiline'})
+    nonprsvg_pit_version = nonprsvg_pit_publisher_tag.label()
+    print('nonprsvg pit version : %s' % nonprsvg_pit_version)
+
 if __name__ == '__main__':
     get_diff_tags()
