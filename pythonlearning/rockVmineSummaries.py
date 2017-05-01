@@ -73,4 +73,3 @@ for elt in colData:
 print('Count for each Value of categorical Label')
 print(list(unique))
 print(catCount)
-
