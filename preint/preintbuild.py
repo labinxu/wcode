@@ -5,18 +5,15 @@
 @author LBX
 copyright
 """
-
+import urllib
 from utils.utils import Browser
 
-import urllib
-
-hosturl = 'https://oc6web.intel.com/login?next=/'
-headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',  
-               'Referer' : 'https://oc6web.intel.com/',
-               'Accept': 'text/html, application/xhtml+xml, */*',
-               'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
-               'Accept-Encoding': 'gzip, deflate'
-           }
+# headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+#                'Referer' : 'https://oc6web.intel.com/',
+#                'Accept': 'text/html, application/xhtml+xml, */*',
+#                'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
+#                'Accept-Encoding': 'gzip, deflate'
+#            }
 def check_login(response):
     """
     @param: response submit login response
@@ -31,7 +28,7 @@ def check_login(response):
 
 def login_preint(username, password):
     """
-    @param:username 
+    @param:username
     @param: password
     @return: True if login successful
     @raise exception: None
@@ -43,7 +40,8 @@ def login_preint(username, password):
     browser = Browser()
     browser.open(loginurl)
     tag = browser.find('input', {'name':'csrfmiddlewaretoken'})
-    postData = {'csrfmiddlewaretoken': tag.attrs['value'], 'next':' ', 'username': username, 'password':password}
+    postData = {'csrfmiddlewaretoken': tag.attrs['value'],
+                'next':' ', 'username': username, 'password':password}
     postData = urllib.urlencode(postData)
     browser.submit(loginurl, postData)
     return check_login(browser.content), browser
@@ -86,7 +84,7 @@ class PreintBuilder():
         browser.submit(self.pburl, postData)
         return check_login(browser.content), browser
 
-    def trigger_build(self, postData):
+    def trigger_build(self, postdata):
         """
         trigger a new print build
         @param: postData ,build data
