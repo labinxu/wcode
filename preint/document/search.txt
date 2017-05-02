@@ -1,0 +1,22 @@
+about kerberos
+http://stackoverflow.com/questions/21345000/python-kerberos-1-1-1-tar-gz-install-failure-on-windows
+I managed to fix this problem.
+
+    Install $ pip install kerberos-sspi
+    Download requests-kerberos ZIP from GitHub
+    In 'requests-kerberos/kerberos_.py', change the line import kerberos to import kerberos_sspi as kerberos
+    In 'requirements.txt', delete 'kerberos==1.1.1'
+    Run $ python setup.py install.
+
+If you want to run test_requests_kerberos.py that is in requests-kerberos/ you need to change import kerberos with import kerberos_sspi as kerberos.
+
+Beside that you need to change all occurrences of:
+
+with patch.multiple('kerberos', ...)
+
+with:
+
+with patch.multiple('kerberos_sspi', ...)
+===============
+use kerberos
+http://python-notes.curiousefficiency.org/en/latest/python_kerberos.html
