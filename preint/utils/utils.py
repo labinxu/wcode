@@ -12,7 +12,7 @@ from parser import WebParser
 ## copy library bs4 interface
 # import bs4
 
-
+# http://python-notes.curiousefficiency.org/en/latest/python_kerberos.html
 class Browser:
     '''
     brower for html
@@ -48,6 +48,7 @@ class Browser:
         """
         self.reset_parser()
         response = self.opener.open(url, data)
+        
         self.content = response.read()
         self._init_htmlparser(self.content)
         return self.content
@@ -59,6 +60,7 @@ class Browser:
         self.cookie = cookielib.LWPCookieJar(ckname)
         cksupport = urllib2.HTTPCookieProcessor(self.cookie)
         self.opener = urllib2.build_opener(cksupport)
+        #self.opener.addheaders = [{}]
         urllib2.install_opener(self.opener)
 
     def reset_parser(self):
@@ -81,7 +83,7 @@ class Browser:
         #response = self.opener.open(url)
         self.content = response.read()
         return self.content
-        
+
     def open(self, url):
         """
         @param: url page url

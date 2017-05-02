@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # proxy-negotiate
-# https://www.chilkatsoft.com/python.asp
 """
+
 @author labinxux
 for daily build
 headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; \
@@ -12,7 +12,6 @@ WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
                'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
                'Accept-Encoding': 'gzip, deflate'
            }
-           
            	15. Release content preparation
 	• Create a Release content folder at linux build machine(
 	• run query:  https://utpreloaded.rds.intel.com/CqUtpSms/?Query=149956
