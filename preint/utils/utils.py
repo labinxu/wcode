@@ -71,7 +71,17 @@ class Browser:
         # if self.parser:
         #     self.parser.close()
         self.parser = None
+    def open_without_parser(self, url):
+        """
+        @param: url page url
+        """
 
+        # init parser again
+        response = urllib2.urlopen(url)
+        #response = self.opener.open(url)
+        self.content = response.read()
+        return self.content
+        
     def open(self, url):
         """
         @param: url page url
