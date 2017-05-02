@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # proxy-negotiate
+# https://www.chilkatsoft.com/python.asp
 """
 @author labinxux
 for daily build
