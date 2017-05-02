@@ -46,3 +46,12 @@ if __name__ == '__main__':
     password = "zhutousan110"
     msg = "hi lbx"
     Sendmail(subject, msg, toaddrs, fromaddr, smtpaddr, password)
+
+if __name__ == '__main__':
+    fromaddr = "wsndnr@163.com"
+    smtpaddr = "smtp.163.com"
+    toaddrs = ["wsndnr@163.com"]
+    subject = "Hello wsndnr"
+    password = "zhutousan110"
+    msg = "hi lbx"
+    Sendmail(subject, msg, toaddrs, fromaddr, smtpaddr, password)
