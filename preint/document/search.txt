@@ -1,3 +1,5 @@
+
+curl -v -X POST -d'{"QueryName":"149956"}' -u labinxux --negotiate https://utpreloaded.rds.intel.com/CqUtpSms/AddQuery
 about kerberos
 http://stackoverflow.com/questions/21345000/python-kerberos-1-1-1-tar-gz-install-failure-on-windows
 I managed to fix this problem.
