@@ -38,18 +38,10 @@ WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
 """
 import json
 import urllib
+import re
 import subprocess, os
 from utils.utils import Browser
 import utils.utils
-
-def check_login(response):
-    """
-    @param response: the web page content
-    post_data:csrfmiddlewaretoken=Ba3xaIXEOalzR3QyTF1rpp5CJe30PsMs&next=%2F&
-    username=labinxux&password=Mar@0303
-    """
-
-    return True if response.find('logou') != -1 else False
 
 def login_preint(username, password):
     """
@@ -89,6 +81,13 @@ class DailyBuilder():
         self.baseTag = None
     def setBaseTag(self, baseTag):
         self.baseTag = baseTag
+
+    def getReleaseContentXML(self):
+        queryurl='https://utpreloaded.rds.intel.com/CqUtpSms/?Query=149956'
+        self.browser.post_with_requests(queryurl)
+        #xmlurl = 'https://utpreloaded.rds.intel.com/CqUtpSms/Handlers/Master/DownloadFile.ashx'
+        #self.browser.open_with_requests(xmlurl)
+        return self.browser.content
         
     def login(self, username, password):
         """
@@ -107,7 +106,8 @@ class DailyBuilder():
         self.browser.submit(loginurl, post_data)
 
         return check_login(self.browser.content), self.browser
-    def getTags(self):
+        
+    def getTopBuildName(self):
         """
         get the different about PIT publisher and nonprsvg publisher
         """
@@ -126,20 +126,18 @@ class DailyBuilder():
     def getDifference(self, tag1, tag2):
         #differUrl https://oc6web.intel.com/mani/ICE7360_05.1718.06/ICE7360_05.1718.07/#table
         url = self.differUrl % (tag1, tag2)
-        print('query from %s' % url)
+        print('Query from %s:' % url)
         jsonContent = self.browser.open(url)
         ret = getUTPList(jsonContent)
         return ret
         
-    def getCurrentTag(self):
+    def getCurrentBuildName(self, base):
+
         bl_releases = 'https://sp2010.ger.ith.intel.com/sites/XMM7360/Lists/BL_Releases/Default.aspx'
-        page = self.browser.open_without_parser(bl_releases)
-        '''ICE7360_05.1719.05'''
-        pa = re.compile(r'ICE7360_05\.[0-9]{4}\.[0-9]{2}')
-        m = pa.search(page)
-        if m:
-            return m.group(0)
-        return None
+        self.browser.open_with_requests(bl_releases)
+        pa = re.compile(base+'\.[0-9]{2}')
+        m = pa.search(self.browser.content)
+        return m.group()
         
     def runCommand(self, commandline):
         p = subprocess.Popen(commandline,
@@ -168,12 +166,11 @@ class DailyBuilder():
         
 if __name__ == '__main__':
     dbu = DailyBuilder()
-    #cur_tag = dbu.getCurrentTag()
-    #tag1, tag2 = dbu.getTags()
-    #tag1, tag2 = utils.sortTags(tag1, tag2)
-    dbu.setBaseTag('ICE7360_05.1718.01')
-    dbu.createWorkspace()
-    #smses = dbu.getDifference(cur_tag.strip(), tag2.strip())
-    #print(smses)
-    
-    
+    tag1, tag2 = dbu.getTopBuildName()
+    tag1, tag2 = utils.sortBuildName(tag1, tag2)
+    base = tag2[0:-3]
+    cur_tag = dbu.getCurrentBuildName(base)
+    print(cur_tag, tag1, tag2)
+    diff = dbu.getDifference("ICE7360_05.1719.06", tag2)
+    print(diff)
+   
