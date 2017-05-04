@@ -14,6 +14,7 @@ function initEnv()
     cd /local/labinxux/preint
     echo "[+]create dir : "$1" and enter it.."
     mkdir $1;cd $1
+    export WORKSPACE=`pwd`
     echo "[+] Sync source code ..."
     echo '[+] bee init -p ice7360 -v $1 && bee sync -j16'
     bee init -p ice7360 -v $1 && bee sync -j16
@@ -60,6 +61,8 @@ function Copy2ShareFolder()
     destFolder=`ls -l | egrep -o "ICE7360_PREINT_BENDER_[0-9]{4}"`
     echo "copy $destFolder to /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1"
     cp -r $destFolder /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1
+    echo "[+] Change to ${WORKSPACE}"
+    cd ${WORKSPACE}
 }
 function getCherryPicks()
 {
@@ -85,11 +88,14 @@ function CherryPick()
 function TriggerHarts()
 {
 
-    echo "[+] Trigger.."
+    echo "[+] Trigger Harts beging.."
     echo "param is PREINT ID ..."
     cd  modem/system-build/product
  # PREINT ID ICE7360_05.1716.05_PREINT_THU_05
     ./submit_harts_jobs.sh $1 PREINT_ICE7360
+    echo "[+] Change directory to ${WORKSPACE}"
+    cd ${WORKSPACE}
+    echo "[+] Trigger Harts end.."
 }
 function Trigger3GW()
 {
@@ -128,5 +134,19 @@ function startpreint()
     initEnv $baseline
     
     CherryPick $1
+
+    TriggerHarts $preintId
 }
 
+function testpreint()
+{
+#    export WORKSPACE=`pwd`
+ #   cd bin
+  #  echo `pwd`
+   # echo "Current dir is : `pwd`"
+    #cd ${WORKSPCE}
+    #echo "Current dir is : ${WORKSPACE}"
+    module load opticm6
+    source oc6env
+    echo "last return" $?
+}
