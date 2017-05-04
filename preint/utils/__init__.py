@@ -1,4 +1,4 @@
-def sortTags(tag1, tag2):
+def sortBuildName(tag1, tag2):
     #tag1 = 'ICE7360_05.1719.05'
     #tag2 = 'ICE7360_05.1719.01'
     tag_1 = tag1.split('.') 
