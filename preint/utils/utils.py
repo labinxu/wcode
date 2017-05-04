@@ -9,6 +9,9 @@ copyright
 import urllib2
 import cookielib
 from parser import WebParser
+import requests
+from requests_kerberos import HTTPKerberosAuth, REQUIRED
+        
 ## copy library bs4 interface
 # import bs4
 
@@ -73,6 +76,29 @@ class Browser:
         # if self.parser:
         #     self.parser.close()
         self.parser = None
+    def open_with_requests(self, url, auth=True):
+        if not auth:
+            return
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED,
+            sanitize_mutual_error_response=False)
+        r = requests.get(url, auth=kerberos_auth, verify=False)
+        self.content = r.text.encode('utf-8')
+        return r
+    def post_with_requests(self, url, auth=True):
+        import json
+        url = 'https://utpreloaded.rds.intel.com/CqUtpSms/RecentHandling.asmx/AddQuery'
+        payload = {"QueryName":"149956"}
+        headers = {
+        'Accept':'*/*',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'en-US,en;q=0.8',
+        'Connection':'keep-alive',
+        'Content-Length':'22',
+        'Content-Type':'application/json; charset=UTF-8'}
+        kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED,
+            sanitize_mutual_error_response=False)
+        r = requests.post(url,auth=kerberos_auth, data=json.dumps(payload), headers=headers)
+        return r
     def open_without_parser(self, url):
         """
         @param: url page url
