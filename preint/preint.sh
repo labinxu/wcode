@@ -1,5 +1,8 @@
-#!/bin/bash -V
-
+#!/bin/bash
+set -v
+echo "Start print build"
+username=`whoami`
+export DISK_DIR=/local/$username/preint
 function initEnv()
 {
     if [[ $1 == "" ]];
@@ -11,7 +14,8 @@ function initEnv()
     echo "init the opticm environment..."
     module load opticm6
     echo "[+]Enter workspace dir..."
-    cd /local/labinxux/preint
+    mkdir -p $DISK_DIR
+    cd $DISK_DIR
     echo "[+]create dir : "$1" and enter it.."
     mkdir $1;cd $1
     export WORKSPACE=`pwd`
@@ -22,8 +26,6 @@ function initEnv()
     module load artifactory
     echo "[+] module unload perl;module load perl"
     module unload perl;module load perl
-    echo "[+] oc6env"
-    -oc6env
 
 }
 function CopyBinFromBender()
@@ -134,6 +136,9 @@ function startpreint()
     initEnv $baseline
     
     CherryPick $1
+    
+    CopyBinFromBender $benderId
+    Copy2ShareFolder $preintId
 
     TriggerHarts $preintId
 }
