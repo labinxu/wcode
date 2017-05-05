@@ -17,6 +17,10 @@ WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
 	• run query:  https://utpreloaded.rds.intel.com/CqUtpSms/?Query=149956
 	Save the output as XML file at Release content folder(Remove the date. File name should be “ReleaseContent_XMM7360.xml”)(将下载的xml放到workspace下，然后建立ishare.txt 文件 ishare.txt放的是 差异 列表)
 	• Create ishare.txt at same location with excel, and open it. And copy ticket from diff tool to this txt
+   === for bash
+   module unload perl;module load perl
+perl -I/nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/perllib/ /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/relnotes.pl -proj=XMM7360 -release=ICE7360_05.1720.01 -utpfile=ishare.txt -xmlfile=ReleaseContent_XMM7360.xml
+===
 	• Module unload perl && module load perl
 	• Run:  setenv PERL5LIB /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/perllib/ 
 	• Run: perl /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/relnotes.pl -proj=XMM7360 -release=ICE7360_05.1718.01 -utpfile=ishare.txt -xmlfile=ReleaseContent_XMM7360.xml
@@ -42,7 +46,7 @@ import re
 import subprocess, os
 from utils.utils import Browser
 import utils.utils
-
+ErrorTag ="ERROR: %s"
 def login_preint(username, password):
     """
     @param username: username for website
@@ -63,22 +67,37 @@ def login_preint(username, password):
     
 def getUTPList(json_content):
     result =[]
-    json_to_python = json.loads(json_content)
-    for modem_item in json_to_python['diff']['modem/modem']:
-         result.extend(modem_item['UTP'])
-    for modem_item in json_to_python['diff']['modem/lte_fw']:
-         result.extend(modem_item['UTP'])
+    jsonloads = json.loads(json_content)
+    for item , val in jsonloads['diff'].items():
+        for li in val:
+            result.extend(li["UTP"])
+    result = list(set(result))
     return result
-    
+
+def GetBuildNumberAndBuildName(data):
+    pa = re.compile(r'Build #(\d{3})')
+    buildnumber = pa.search(data)
+    bnpa = re.compile(r'<div>(ICE7360_05\.\d{4}\.\d{2})</div>')
+    buildname = bnpa.search(data)
+    return (buildnumber.group(1), buildname.group(1))
+        
 class DailyBuilder():
     def __init__(self):
         self.pit_publisher_url = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM-PIT_PUBLISHER/'
         self.nonprsvg_pit_publisher_url = \
 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM_NONPRSVG_PIT_PUBLISHER/'
-
+        self.bn2url = {}
         self.differUrl = 'https://oc6web.intel.com/mani/%s/%s/json'
         self.browser = Browser()
         self.baseTag = None
+        self.sharepointTable = []
+        self.isharefile = 'ishare.txt'
+
+    def writeSharefile(self, data):
+            with open('ishare.txt', 'w') as f:
+                for line in data:
+                    f.write(line+'\n')
+
     def setBaseTag(self, baseTag):
         self.baseTag = baseTag
 
@@ -106,22 +125,26 @@ class DailyBuilder():
         self.browser.submit(loginurl, post_data)
 
         return check_login(self.browser.content), self.browser
-        
+    
     def getTopBuildName(self):
         """
         get the different about PIT publisher and nonprsvg publisher
         """
-        self.browser.open(self.pit_publisher_url)
-        attrs = {'class':'pane desc indent-multiline'}
-        pit_publisher_tag = self.browser.find('div', attrs)
-        pit_tag = pit_publisher_tag.label()
-        print('pit_version: %s' % pit_tag)
+        print("Get top build name...")
+        lastpitbuild = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM-PIT_PUBLISHER/lastBuild/'
+        print("Open %s" % lastpitbuild)
+        data = self.browser.open_without_parser(lastpitbuild)
+        pitBuildNumber , pitBuildName = GetBuildNumberAndBuildName(data)
+        print('Pit BuildName: %s ==== Build Number is %s' % (pitBuildName, pitBuildNumber))
+        self.bn2url[pitBuildName] = self.pit_publisher_url + pitBuildNumber
         
-        self.browser.open(self.nonprsvg_pit_publisher_url)
-        nonprsvg_pit_publisher_tag = self.browser.find('div', {'class': 'pane desc indent-multiline'})
-        nonprsvg_pit_tag = nonprsvg_pit_publisher_tag.label()
-        print('nonprsvg_pit_version: %s' % nonprsvg_pit_tag)
-        return(pit_tag, nonprsvg_pit_tag)
+        lastnonprsvgBuild = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM_NONPRSVG_PIT_PUBLISHER/lastBuild/'
+        print("Open %s" % lastnonprsvgBuild)
+        data = self.browser.open_without_parser(lastnonprsvgBuild)
+        nonprsvgBuildNumber, nonprsvgBuildName = GetBuildNumberAndBuildName(data)
+        self.bn2url[nonprsvgBuildName] = self.nonprsvg_pit_publisher_url + nonprsvgBuildNumber
+        print('nonprsvgBuildName: %s  ==== nonprsvgBuildNumber %s' % (nonprsvgBuildName, nonprsvgBuildNumber))
+        return(pitBuildName, nonprsvgBuildName)
         
     def getDifference(self, tag1, tag2):
         #differUrl https://oc6web.intel.com/mani/ICE7360_05.1718.06/ICE7360_05.1718.07/#table
@@ -129,6 +152,7 @@ class DailyBuilder():
         print('Query from %s:' % url)
         jsonContent = self.browser.open(url)
         ret = getUTPList(jsonContent)
+        print("Different %s" % ret)
         return ret
         
     def getCurrentBuildName(self, base):
@@ -137,8 +161,12 @@ class DailyBuilder():
         self.browser.open_with_requests(bl_releases)
         pa = re.compile(base+'\.[0-9]{2}')
         m = pa.search(self.browser.content)
-        return m.group()
-        
+        if m:
+            print("Current build name %s" % m.group())
+            return m.group()
+        else:
+            print(ErrorTag % "Can not found Current Build name")
+            #open('blreleasedefault.aspx','w').write(self.browser.content)
     def runCommand(self, commandline):
         p = subprocess.Popen(commandline,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
@@ -160,17 +188,73 @@ class DailyBuilder():
     def pushBinaray(self):
         command = 'perl /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/copy_a2s.pl %s' % self.baseTag
         p = self.runCommand(command)
-        releaseDir='/nfs/imu/disks/sw_builds/XMM7360/Release/MODEM_05.1719/MAIN/%s'% self.baseTag
+        releaseDir='/nfs/imu/disks/sw_builds/XMM7360/Release/MODEM_05.1719/MAIN/%s' % self.baseTag
         command = 'chmod -R 777 %s' % releaseDir
         p = self.runCommand(command)
+    def getDataForBuildName(self, buildname):
+        buildlink = self.bn2url[buildname]
+        print("Get Data for %s" % buildname)
+        print("Build link %s" % buildlink)
+        buildLog = self.browser.open_without_parser(buildlink+'/console')
+        #open('buildlog','w').write(buildLog)
+        # ===========================================================
+        #https://tcloud6-delivery.rds.intel.com/b/job/PREPARE-WORKSPACE/163631/console
+        prepareWorkspace = r'https://tcloud6-delivery.rds.intel.com/b/job/PREPARE-WORKSPACE/[0-9]{6}'
+        prew = re.compile(prepareWorkspace)
+        print("Pattern prepareWorkspace %s" % prepareWorkspace)
+        result = prew.search(buildLog)
+        ppwkscsLink = ''
+        if result:
+            ppwkscsLink = result.group()
+            print("Prepare Workspace console %s" % ppwkscsLink)
+            data = self.browser.open_without_parser(ppwkscsLink+'/console')
+            #baseline: ICE7360/ICE7360_2017-05-03_1903_UTC
+            blpa = re.compile(r'baseline.{2}ICE7360/(ICE7360_\d{4}-\d{2}-\d{2}_\d{4}_UTC)')
+            gitTag = blpa.search(data).group(1)
+            print("Initial Baseline (SIT Publisher) Git Tag: %s" % gitTag)
+            self.sharepointTable.append(('Initial Baseline (SIT Publisher) Git Tag', gitTag))
+            print("Baseline GIT TAG: %s" % gitTag)
+            self.sharepointTable.append(('Baseline GIT TAG', gitTag))
         
+        # ========================================================
+        self.sharepointTable.append(('PIT Link', self.bn2url[buildname]))
+        self.sharepointTable.append(('Build name', buildname))
+        self.sharepointTable.append(('Build GIT TAG', buildname))
+        sharefolder = r"\\musdsara001.imu.intel.com\sw_builds\XMM7360\Release\MODEM_05.1719\MAIN"
+        self.sharepointTable.append(('XMM7360 Build Location', sharefolder + '\\' + buildname))
+        artifactorylocation = 'https://mu-artifactory-builds.imu.intel.com:8443/artifactory/simple/modem-sit-xmm7360-imc-mu/pit/' 
+        self.sharepointTable.append(('XMM7360 Artifactory Location', artifactorylocation + buildname))
+        self.sharepointTable.append(('PRIO_1 Tickets', 'Proi red covered in xls'))
+        
+        #===================================================
+        revNANDLink = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_UBS-FULL-MODEM-BUILD_XMM7360-REV-2.1-NAND/lastBuild/console'
+ 
+        data = self.browser.open_without_parser(revNANDLink)
+        sstpa = re.compile('build_number=([a-zA-Z0-9]{35}__ICE\d{4}_\d{2}.\d{4}.\d{2})')
+        sstBuildNumber = sstpa.search(data)
+        sst = ""
+        if sstBuildNumber:
+            sst = sstBuildNumber.group(1)
+            print("SSTDecoders %s" % sst)
+        else:
+            print(ErrorTag % "Can not found SSTDecoders")
+        STTDecoders = r'\\imcsmb.imu.intel.com\pftools_decoders'
+        self.sharepointTable.append(('STT Decoders', STTDecoders + '\\'+ sst))
+
 if __name__ == '__main__':
     dbu = DailyBuilder()
     tag1, tag2 = dbu.getTopBuildName()
     tag1, tag2 = utils.sortBuildName(tag1, tag2)
     base = tag2[0:-3]
     cur_tag = dbu.getCurrentBuildName(base)
-    print(cur_tag, tag1, tag2)
-    diff = dbu.getDifference("ICE7360_05.1719.06", tag2)
-    print(diff)
-   
+    # debug
+    if not cur_tag:
+        diff = dbu.getDifference(cur_tag, tag2)
+    else:
+        diff = dbu.getDifference(tag1, tag2)
+    dbu.writeSharefile(diff)
+    dbu.getDataForBuildName(tag2)
+    print('===============Table Data====================')
+    for key, value in dbu.sharepointTable:
+        print(key, value)
+    print('===============End====================')
