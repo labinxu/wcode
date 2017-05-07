@@ -45,8 +45,14 @@ import urllib
 import re
 import subprocess, os
 from utils.utils import Browser
+from utils.shinteract import ShInteractor
 import utils.utils
+import datetime
+from bs4 import BeautifulSoup
+from utils import util_excel
+
 ErrorTag ="ERROR: %s"
+
 def login_preint(username, password):
     """
     @param username: username for website
@@ -92,6 +98,10 @@ class DailyBuilder():
         self.baseTag = None
         self.sharepointTable = []
         self.isharefile = 'ishare.txt'
+        self.shInteractor = ShInteractor(username='labinxux',
+                                         hostname='musxeris016.imu.intel.com')
+
+        self.workspaceOnServer = None
 
     def writeSharefile(self, data):
             with open('ishare.txt', 'w') as f:
@@ -161,36 +171,82 @@ class DailyBuilder():
         self.browser.open_with_requests(bl_releases)
         pa = re.compile(base+'\.[0-9]{2}')
         m = pa.search(self.browser.content)
-        if m:
+        if not m:
             print("Current build name %s" % m.group())
-            return m.group()
-        else:
-            print(ErrorTag % "Can not found Current Build name")
-            #open('blreleasedefault.aspx','w').write(self.browser.content)
+            return None
+
+        print("Current build name %s" % m.group())
+        self.currentBuildname = m.group()
+
+        # get url for bl release
+        soup = BeautifulSoup(self.browser.content, "html.parser")
+        tag = soup.find('a', attrs={'onfocus':'OnLink(this)'},text=self.currentBuildname[:-3])
+        
+        self.blrelUrl = tag.attrs['href']
+        return self.currentBuildname
+
     def runCommand(self, commandline):
         p = subprocess.Popen(commandline,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
         return p
-    
-    def createWorkspace(self):
-        os.chdir('/local/labinxux/dailybuild')
-        workspace = '%s' % self.baseTag
-        command = 'mkdir %s' % workspace
-        p = self.runCommand(command)
-        print(p.stdout)
-        os.chdir(workspace)
-        # init workspace
-        print(os.getcwd())
-        initCommand = 'bee init -p ice7360 -v %s && bee sync -j16' % self.baseTag
-       # p = self.runCommand(initCommand)
-        os.chdir(self.baseTag)
+
+    def runShCmd(self, cmdline):
+        if cmdline.strip() == '':
+            print('cmdline can not empty')
+            return
+        stdin, stdout, stderr = self.shInteractor.execCommand(cmdline)
+        return stdout, stderr
+
         
-    def pushBinaray(self):
-        command = 'perl /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/copy_a2s.pl %s' % self.baseTag
-        p = self.runCommand(command)
-        releaseDir='/nfs/imu/disks/sw_builds/XMM7360/Release/MODEM_05.1719/MAIN/%s' % self.baseTag
-        command = 'chmod -R 777 %s' % releaseDir
-        p = self.runCommand(command)
+    def initBeeWorkspace(self, buildname):
+        # self.hostname = 'musxeris016.imu.intel.com'
+        # self.port = 22   
+        # self.username = 'labinxux'   
+        # self.password = 'Mar@0303'
+
+        #self.shInteractor = ShInteractor(username='labinxux',
+         #                                hostname='musxeris016.imu.intel.com')
+        
+        out, err = self.runShCmd('whoami')
+        self.useraccount = out.read().strip()
+        self.workspaceOnServer = '/local/%s/dailybuild/' % self.useraccount
+        # mkdir workspace
+        #out, err = self.runShCmd('mkdir -p /local/%s/dailybuild/%s' % (self.useraccount, buildname))
+        self.uploadfile('ishare.txt', self.workspaceOnServer+'ishare.txt')
+        # find ReleaseContent file
+        today = datetime.date.today()
+        relConFile = "%s - %s" % (str(today), 'ReleaseContent_XMM7360.xml')
+        self.uploadfile(relConFile, self.workspaceOnServer+'ReleaseContent_XMM7360.xml')
+
+    def checkFile(self, localfile, remotefile):
+        print('Check the md5 and sha1 for file ')
+        lfmd5, lfsha1 = utils.getMD5SHA1(localfile)
+        print("%s : MD5: %s" % (localfile, lfmd5))
+        print("%s : SHA1:%s" % (localfile, lfsha1))
+        # 　# md5sum download.iso
+        # sha1sum download.iso
+        stdout, stderr = self.runShCmd('md5sum %s' % remotefile)
+        rfmd5 = stdout.read()
+        stdout, stderr = self.runShCmd('sha1sum %s' % remotefile)
+        rfsha1 = stdout.read()
+
+        rfmd5 = rfmd5.split(' ')[0].strip()
+        rfsha1 = rfsha1.split(' ')[0].strip()
+        print("Remote %s : MD5: %s" % (localfile, rfmd5))
+        print("Remote %s : SHA1:%s" % (localfile, rfsha1))
+        if lfmd5 == rfmd5 and lfsha1 == rfsha1:
+            print("Same file %s" % localfile)
+            return False
+        else:
+            return True
+        
+        
+    def uploadfile(self, localfile, remotefile):
+        if self.checkFile(localfile, remotefile):
+            print("upload file %s: %s" % (localfile, remotefile))
+            self.shInteractor.transFile(localfile, remotefile)
+
+    
     def getDataForBuildName(self, buildname):
         buildlink = self.bn2url[buildname]
         print("Get Data for %s" % buildname)
@@ -241,12 +297,37 @@ class DailyBuilder():
         STTDecoders = r'\\imcsmb.imu.intel.com\pftools_decoders'
         self.sharepointTable.append(('STT Decoders', STTDecoders + '\\'+ sst))
 
+    def run(self, buildname):
+        home = "/nfs/site/home/%s" % self.useraccount 
+
+        cmdline = home + ('/bin/dailybuild.sh %s' % buildname)
+        print('Run %s' % cmdline)
+        stdout, stderr = self.runShCmd(cmdline)
+        print(stdout.read())
+
+    def writeXlsxFile(self, filename):
+        # wirte checklist
+        xlsxHelper = util_excel.XlsxHelper("./data/RELEASE_CHECKLIST_TEMPLATE.xlsx")
+        xlsxHelper.write('C1', tag2)
+        xlsxHelper.write('C10', self.blrelUrl)
+        # RELEASE_CHECKLIST_05.1720.01.xlsx
+        # tag2  ICE7360_05.1720.03
+        xlsxHelper.save(filename)
+
 if __name__ == '__main__':
     dbu = DailyBuilder()
     tag1, tag2 = dbu.getTopBuildName()
     tag1, tag2 = utils.sortBuildName(tag1, tag2)
     base = tag2[0:-3]
     cur_tag = dbu.getCurrentBuildName(base)
+    sufixname=tag2[8:]
+    releasechecklistfile = 'RELEASE_CHECKLIST_%s.xlsx' % sufixname
+    dbu.writeXlsxFile(releasechecklistfile)
+    SHARE_FOLDER_ROOT='/nfs/imu/disks/sw_builds/XMM7360/Release/MODEM_%s/MAIN/%s/'
+    #MODEM_05.1720\MAIN\ICE7360_05.1720.03
+    detfile = SHARE_FOLDER_ROOT % (tag2[8:-3], tag2)
+    dbu.uploadfile(releasechecklistfile, detfile + releasechecklistfile)
+    
     # debug
     if not cur_tag:
         diff = dbu.getDifference(cur_tag, tag2)
@@ -254,7 +335,14 @@ if __name__ == '__main__':
         diff = dbu.getDifference(tag1, tag2)
     dbu.writeSharefile(diff)
     dbu.getDataForBuildName(tag2)
-    print('===============Table Data====================')
+    # upload the isharefile and ReleaseContent file
+    dbu.initBeeWorkspace(tag2)
+    dbu.run(tag2.strip())
+    print('\n\n==============END=================\n\n')
+
+
+    print('\n\n===============Table Data====================')
     for key, value in dbu.sharepointTable:
-        print(key, value)
-    print('===============End====================')
+        print("%s: %s" % (key, value))
+    print('===============End====================\n\n\n')
+   
