@@ -173,7 +173,6 @@ class DailyBuilder():
         m = pa.search(self.browser.content)
         if not m:
             print("Current build name %s" % m.group())
-            return None
 
         print("Current build name %s" % m.group())
         self.currentBuildname = m.group()
@@ -183,6 +182,7 @@ class DailyBuilder():
         tag = soup.find('a', attrs={'onfocus':'OnLink(this)'},text=self.currentBuildname[:-3])
         
         self.blrelUrl = tag.attrs['href']
+        self.sharepointTable.append(('BL_URL', self.blrelUrl))
         return self.currentBuildname
 
     def runCommand(self, commandline):
@@ -246,7 +246,11 @@ class DailyBuilder():
             print("upload file %s: %s" % (localfile, remotefile))
             self.shInteractor.transFile(localfile, remotefile)
 
-    
+    def getInitConfigVersion(self, buildname):
+        rfrllb = '/modem/mhw_rf/rf_init_config/INIT_CFG_ES200/rf_release_label.txt'
+        stdout, stderr = self.runShCmd('cat %s' %   self.workspaceOnServer+buildname+rfrllb)
+        return stdout.read().strip()
+
     def getDataForBuildName(self, buildname):
         buildlink = self.bn2url[buildname]
         print("Get Data for %s" % buildname)
@@ -276,16 +280,18 @@ class DailyBuilder():
         self.sharepointTable.append(('PIT Link', self.bn2url[buildname]))
         self.sharepointTable.append(('Build name', buildname))
         self.sharepointTable.append(('Build GIT TAG', buildname))
-        sharefolder = r"\\musdsara001.imu.intel.com\sw_builds\XMM7360\Release\MODEM_05.1719\MAIN"
+        sharefolder = r"\\musdsara001.imu.intel.com\sw_builds\XMM7360\Release\MODEM_%s\MAIN" % buildname[8:-3]
         self.sharepointTable.append(('XMM7360 Build Location', sharefolder + '\\' + buildname))
         artifactorylocation = 'https://mu-artifactory-builds.imu.intel.com:8443/artifactory/simple/modem-sit-xmm7360-imc-mu/pit/' 
         self.sharepointTable.append(('XMM7360 Artifactory Location', artifactorylocation + buildname))
+        confverion = self.getInitConfigVersion(buildname)
+        self.sharepointTable.append(('Content / Components:', confverion))
         self.sharepointTable.append(('PRIO_1 Tickets', 'Proi red covered in xls'))
         
         #===================================================
         revNANDLink = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_UBS-FULL-MODEM-BUILD_XMM7360-REV-2.1-NAND/lastBuild/console'
  
-        data = self.browser.open_without_parser(revNANDLink)
+	data = self.browser.open_without_parser(revNANDLink)
         sstpa = re.compile('build_number=([a-zA-Z0-9]{35}__ICE\d{4}_\d{2}.\d{4}.\d{2})')
         sstBuildNumber = sstpa.search(data)
         sst = ""
@@ -320,6 +326,18 @@ if __name__ == '__main__':
     tag1, tag2 = utils.sortBuildName(tag1, tag2)
     base = tag2[0:-3]
     cur_tag = dbu.getCurrentBuildName(base)
+    
+    # debug
+    #if not cur_tag:
+    diff = dbu.getDifference(cur_tag, tag2)
+    #else:
+     #   diff = dbu.getDifference(tag1, tag2)
+    dbu.writeSharefile(diff)
+    dbu.getDataForBuildName(tag2)
+    # upload the isharefile and ReleaseContent file
+    dbu.initBeeWorkspace(tag2)
+    dbu.run(tag2.strip())
+
     sufixname=tag2[8:]
     releasechecklistfile = 'RELEASE_CHECKLIST_%s.xlsx' % sufixname
     dbu.writeXlsxFile(releasechecklistfile)
@@ -327,17 +345,7 @@ if __name__ == '__main__':
     #MODEM_05.1720\MAIN\ICE7360_05.1720.03
     detfile = SHARE_FOLDER_ROOT % (tag2[8:-3], tag2)
     dbu.uploadfile(releasechecklistfile, detfile + releasechecklistfile)
-    
-    # debug
-    if not cur_tag:
-        diff = dbu.getDifference(cur_tag, tag2)
-    else:
-        diff = dbu.getDifference(tag1, tag2)
-    dbu.writeSharefile(diff)
-    dbu.getDataForBuildName(tag2)
-    # upload the isharefile and ReleaseContent file
-    dbu.initBeeWorkspace(tag2)
-    dbu.run(tag2.strip())
+
     print('\n\n==============END=================\n\n')
 
 
@@ -345,4 +353,4 @@ if __name__ == '__main__':
     for key, value in dbu.sharepointTable:
         print("%s: %s" % (key, value))
     print('===============End====================\n\n\n')
-   
+    
