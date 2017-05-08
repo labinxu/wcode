@@ -1,4 +1,5 @@
 #!/bin/bash
+set -v
 username=`whoami`
 export DISK_DIR=/local/$username/preint
 
@@ -8,6 +9,12 @@ function module()
     eval `/p/inway_arch/tools/opensource/Modules/3.2.10-i01/bin/modulecmd bash $*`
 }
 
+function printCurrentDir()
+{
+    currentdir=`pwd`
+    echo "Current dir is: ${currentdir}"
+
+}
 function initEnv()
 {
     if [[ $1 == "" ]];
@@ -24,15 +31,20 @@ function initEnv()
     echo "[+]create dir : "$1" and enter it.."
     mkdir $1;cd $1
     export WORKSPACE=`pwd`
-    echo "[+] Sync source code ..."
-    echo '[+] bee init -p ice7360 -v $1 && bee sync -j16'
-    bee init -p ice7360 -v $1 && bee sync -j16
     echo "[+] module load artifactory"
     module load artifactory
     echo "[+] module unload perl;module load perl"
     module unload perl;module load perl
-
 }
+
+function syncCode()
+{
+    echo "[+] Sync source code ..."
+    echo '[+] bee init -p ice7360 -v $1 && bee sync -j16'
+    bee init -p ice7360 -v $1 && bee sync -j16
+    echo "[+] module load artifactory"
+}
+
 function CopyBinFromBender()
 {
     if [[ $1 == "" ]];
@@ -46,18 +58,38 @@ function CopyBinFromBender()
 	echo "[*] Please input correct bender id.."
 	return 1
     fi
-
-
+    cd ${WORKSPACE}
+    printCurrentDir
+    module load artifactory
+    module unload perl
+    module load perl
     perl /home/labinxux/bin/copy_b2e.pl $1 xmm7360
+    
 }
 
 function RenameTempFolder()
 {
+    echo "cd ${WORKSPACE}"
+    cd ${WORKSPACE}
+    printCurrentDir
+    # temp_ICE7360_PREINT_BENDER_2333
+    OUTPUT="output"
+    ICE7360="ICE7360"
     destFolderName=`ls temp_* |head -n 1 | egrep "ICE7360_PREINT_BENDER_[0-9]{4}"`
-    echo "[+] Rename folder"
-    outFolder=`ls  | egrep  "temp_" | head -n 1`
-    echo "[+] Rename $outfolder to output"
-    mv $outFolder output
+    echo "Dest folder ${destFolderName}"
+    #ICE7360
+    echo "[+] Rename folder ..."
+    outFolder=`ls | egrep  "temp_" | head -n 1`
+    if [ ! -d $outFolder ];
+    then
+	echo "[*] Error : ${outFolder} not exists"
+	exit 1
+    fi
+    # temp_ICE7360_PREINT_BENDER_2333
+    echo "[+] Rename $outfolder to ${OUTPUT}"
+    mv $outFolder ${OUTPUT}
+    printCurrentDir
+    mv "${OUTPUT}/${destFolderName}" "${OUTPUT}/${ICE7360}"
 }
 
 function Copy2ShareFolder()
@@ -94,12 +126,21 @@ function CherryPick()
 
 function TriggerHarts()
 {
-
     echo "[+] Trigger Harts beging.."
+    cd ${WORKSPACE}
+    printCurrentDir
     echo "param is PREINT ID ..."
     cd  modem/system-build/product
- # PREINT ID ICE7360_05.1716.05_PREINT_THU_05
-    ./submit_harts_jobs.sh $1 PREINT_ICE7360
+    module unload python
+    module load python
+    # PREINT ID ICE7360_05.1716.05_PREINT_THU_05
+    if [ -f "submit_harts_jobs.sh" };
+    then
+	echo "Trigger file is ok"
+    fi
+    # ./submit_harts_jobs.sh $1 PREINT_ICE7360
+
+    
     echo "[+] Change directory to ${WORKSPACE}"
     cd ${WORKSPACE}
     echo "[+] Trigger Harts end.."
@@ -144,7 +185,7 @@ function start()
     
     CopyBinFromBender $benderId
     Copy2ShareFolder $preintId
-
+    RenameTempFolder
     TriggerHarts $preintId
 }
 
@@ -163,3 +204,4 @@ function testpreint()
 
 set -v
 start $1 $2
+
