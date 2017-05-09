@@ -247,7 +247,7 @@ class DailyBuilder():
             self.shInteractor.transFile(localfile, remotefile)
 
     def getInitConfigVersion(self, buildname):
-        rfrllb = '/modem/mhw_rf/rf_init_config/INIT_CFG_ES200/rf_release_label.txt'
+        rfrllb = './modem/mhw_rf/rf_init_config/INIT_CFG_ES200/rf_release_label.txt'
         stdout, stderr = self.runShCmd('cat %s' %   self.workspaceOnServer+buildname+rfrllb)
         return stdout.read().strip()
 
@@ -284,14 +284,12 @@ class DailyBuilder():
         self.sharepointTable.append(('XMM7360 Build Location', sharefolder + '\\' + buildname))
         artifactorylocation = 'https://mu-artifactory-builds.imu.intel.com:8443/artifactory/simple/modem-sit-xmm7360-imc-mu/pit/' 
         self.sharepointTable.append(('XMM7360 Artifactory Location', artifactorylocation + buildname))
-        confverion = self.getInitConfigVersion(buildname)
-        self.sharepointTable.append(('Content / Components:', confverion))
         self.sharepointTable.append(('PRIO_1 Tickets', 'Proi red covered in xls'))
         
         #===================================================
         revNANDLink = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_UBS-FULL-MODEM-BUILD_XMM7360-REV-2.1-NAND/lastBuild/console'
  
-	data = self.browser.open_without_parser(revNANDLink)
+        data = self.browser.open_without_parser(revNANDLink)
         sstpa = re.compile('build_number=([a-zA-Z0-9]{35}__ICE\d{4}_\d{2}.\d{4}.\d{2})')
         sstBuildNumber = sstpa.search(data)
         sst = ""
@@ -300,7 +298,7 @@ class DailyBuilder():
             print("SSTDecoders %s" % sst)
         else:
             print(ErrorTag % "Can not found SSTDecoders")
-        STTDecoders = r'\\imcsmb.imu.intel.com\pftools_decoders'
+        STTDecoders = r'\\imcsmb.imu.intel.com\pftools_decoders\xmm7360'
         self.sharepointTable.append(('STT Decoders', STTDecoders + '\\'+ sst))
 
     def run(self, buildname):
@@ -310,6 +308,9 @@ class DailyBuilder():
         print('Run %s' % cmdline)
         stdout, stderr = self.runShCmd(cmdline)
         print(stdout.read())
+        confverion = self.getInitConfigVersion(buildname)
+        self.sharepointTable.append(('Content / Components:', confverion))
+
 
     def writeXlsxFile(self, filename):
         # wirte checklist
@@ -345,7 +346,7 @@ if __name__ == '__main__':
     #MODEM_05.1720\MAIN\ICE7360_05.1720.03
     detfile = SHARE_FOLDER_ROOT % (tag2[8:-3], tag2)
     dbu.uploadfile(releasechecklistfile, detfile + releasechecklistfile)
-
+    
     print('\n\n==============END=================\n\n')
 
 
