@@ -94,6 +94,7 @@ function genDiffFileAndCopy2ShareFolder()
     fi
 
     cd releasecontent
+    printCurrentDir
     ${PERL} -I/nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/perllib/ /nfs/imu/disks/sw_builds/XMM7360/Docs/Tools/relnotes.pl -proj=XMM7360 -release=${1} -utpfile=../../ishare.txt -xmlfile=../../ReleaseContent_XMM7360.xml
     printCurrentDir 
     echo "Copy ${1}.xls to ${SHARE_FOLDER_ROOT}/${1}/${1}.xls"
