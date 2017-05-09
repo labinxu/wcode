@@ -1,5 +1,5 @@
 #!/bin/bash
-set -v
+
 username=`whoami`
 export DISK_DIR=/local/$username/preint
 
@@ -134,11 +134,11 @@ function TriggerHarts()
     module unload python
     module load python
     # PREINT ID ICE7360_05.1716.05_PREINT_THU_05
-    if [ -f "submit_harts_jobs.sh" };
+    if [ -f "submit_harts_jobs.sh" ];
     then
 	echo "Trigger file is ok"
     fi
-    # ./submit_harts_jobs.sh $1 PREINT_ICE7360
+    ./submit_harts_jobs.sh $1 PREINT_ICE7360
 
     
     echo "[+] Change directory to ${WORKSPACE}"
@@ -180,11 +180,11 @@ function start()
     echo "BENDER ID IS: "$benderId
 
     initEnv $baseline
-    
+    syncCode $baseline
     CherryPick $preintId
     
     CopyBinFromBender $benderId
-    Copy2ShareFolder $preintId
+    #Copy2ShareFolder $preintId
     RenameTempFolder
     TriggerHarts $preintId
 }
@@ -204,4 +204,3 @@ function testpreint()
 
 set -v
 start $1 $2
-
