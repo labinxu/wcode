@@ -10,6 +10,7 @@ sys.path.append('..')
 from utils.parser import WebParser
 import utils.utils
 from utils.utils import Browser
+from utils import outlookhelper
 #import bl_release_parser
 import unittest
 import dailybuild
@@ -18,6 +19,7 @@ import urllib2
 import urllib2
 import base64
 import sys
+import re
 
 class StubDailyBuilder(dailybuild.DailyBuilder):
     def __init__(self):
@@ -43,10 +45,16 @@ class StubDailyBuilder(dailybuild.DailyBuilder):
         return m.group()
        # print(self.browser.content)
 
+        
+
+
 class TestDailyBuilder(unittest.TestCase):
-    def test_login_sp2010(self):
-        pass
- 
+    def test_shell_interactor(self):
+        sdb = StubDailyBuilder()
+        sdb.initBeeWorkspace('ICE7360_1718.09')
+        _, stdout, _ = sdb.shInteractor.execCommand('whoami')
+        print(stdout)
+
 class TestWebBrowser(unittest.TestCase):
 
     def test_webbrowser(self):
@@ -84,7 +92,15 @@ def load_jason(json_content):
          print(modem_item['UTP'])
     for modem_item in json_to_python['diff']['modem/lte_fw']:
          print(modem_item['UTP'])
-
+         
+def ListUTPs():
+        jsonContent = open('../data/5-5json.txt','r').read()
+        jsonloads = json.loads(jsonContent)
+        for item ,val in jsonloads['diff'].items():
+            for li in val:
+                print(li["UTP"])
+            
+        
 def test_login_sp2010():
     sdbu = StubDailyBuilder()
     curBuildName = sdbu.getCurrentTag('ICE7360_05.1719')
@@ -92,6 +108,21 @@ def test_login_sp2010():
     content = sdbu.getReleaseContentXML()
    # https://utpreloaded.rds.intel.com/CqUtpSms/?Query=149956
     #open('C:\Users\labinxux\Downloads\ReleaseContent.xml', 'w').write(content)
+def getpitinfo():
+    content = open('../data/pitlast.html','r').read()
+    pa = re.compile(r'Build #(\d{3})')
+    m = pa.search(content)
+    print(m.group(1))
+    bnpa = re.compile(r'<div>(ICE7360_05\.\d{4}\.\d{2})</div>')
+    r = bnpa.search(content)
+    print(r.group(1))
+
+def searchHarts():
+    sdbu = StubDailyBuilder()
+    url = sdbu.constructResultUrl('ICE7360_05.1719.05_PREINT_WED_04')
+    print(url)
+    
+    #open('hartsresult','w').write(data)
 def main():
     suite = unittest.TestLoader().loadTestsFromTestCase(TestWebBrowser)
     test_result = unittest.TextTestRunner(verbosity=2).run(suite)
@@ -104,31 +135,11 @@ def main():
    #for case, reason in test_result.failures:
    #    print case.id()
    #    print reason
-
+def getMD5SHA1():
+    fsum = utils.getMD5SHA1('../2017-05-06 - ReleaseContent_XMM7360.xml')
+    print(fsum)
 if __name__ == '__main__':
-    from requests_kerberos import HTTPKerberosAuth, REQUIRED
-    import json
-    import requests
-    url = 'https://utpreloaded.rds.intel.com/CqUtpSms/RecentHandling.asmx/AddQuery'
-    payload = {"QueryName":"149956"}
-    headers = {
-    'Accept':'*/*',
-    'Accept-Encoding':'gzip, deflate, br',
-    'Accept-Language':'en-US,en;q=0.8',
-    'Connection':'keep-alive',
-    'Content-Length':'22',
-    'Content-Type':'application/json; charset=UTF-8'}
-    kerberos_auth = HTTPKerberosAuth(mutual_authentication=REQUIRED,
-        sanitize_mutual_error_response=False)
-    r = requests.post(url,auth=kerberos_auth, data=json.dumps(payload), headers=headers, verify=False)
-   # test_login_sp2010()
-    print(r.headers)
-    print(r.text)
-   # main()
-    
-   
-#    br = Browser()
-#    #json_content = br.open('https://oc6web.intel.com/mani/ICE7360_05.1718.06/ICE7360_05.1718.07/json')
-#    json_content='''{"diff": {"modem/lte_fw": [{"hash": "b634c5bddbad1694a9dc4cb66494fa37c2b821ff", "parent": "49d83cb4abaa5866c98c985a9a621ccdb2b0cdae", "author": "Pradeep H N", "OAM": [], "date": "1493172206", "UTP": ["SMS18661387"], "isPerson": true, "marker": true, "subject": "Consider the Gap IntOffset to post to shcedule Suspend/Resume during IRAT gaps"}]
-#, "modem/modem": [{"hash": "316fa63c2bef692cd282fd1a1aac3165e961a0d8", "parent": "b5e44abbafc5dc60a9801a826f39e1cae0b2ee29", "author": "amitx yadav", "OAM": [], "date": "1493188083", "UTP": ["SMS19152640"], "isPerson": true, "marker": true, "subject": "ICE SW-16.0 : TASK=l1ep_1 @ l1e_pal:l1e_crash.c:506,CPU=0,LOG=s:0x0706000078B23B41 v:0x0000000000000000 t:0x00000017 <Timer expired>()"}]}, "removed": [], "added": [], "error": null, "changed": [["modem/lte_fw", "cb969436583db76a2a7eba053029d2b3d221a386", "4abf665ad1a1aa1e184a722cf4860549d802809f"], ["modem/modem", "851e7195ea9d687941f751115915b6e982093cc7", "e94585386a8f76842ec489162bfb09059da3d7c4"]]}'''
-#    load_jason(json_content)     
+    #ListUTPs()
+    #searchHarts()
+    outlookhelper.outlook('../data/emailtemplate.htm')
+    #getpitinfo()
