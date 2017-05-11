@@ -2,7 +2,7 @@
 
 username=`whoami`
 export DISK_DIR=/local/$username/preint
-
+PERL=perl5.87
 function module()
 {
     echo "[+] inner module $*"
@@ -24,25 +24,28 @@ function initEnv()
     fi
 	
     echo "init the opticm environment..."
-    module load opticm6
+   
     echo "[+]Enter workspace dir..."
     mkdir -p $DISK_DIR
     cd $DISK_DIR
     echo "[+]create dir : "$1" and enter it.."
+    if [ -d $1 ];
+    then
+        echo "[+] Empty workspace rm -rf ${1}"
+        rm -rf $1
+    fi
     mkdir $1;cd $1
     export WORKSPACE=`pwd`
     echo "[+] module load artifactory"
     module load artifactory
-    echo "[+] module unload perl;module load perl"
-    module unload perl;module load perl
 }
 
 function syncCode()
 {
+    module load opticm6
     echo "[+] Sync source code ..."
     echo '[+] bee init -p ice7360 -v $1 && bee sync -j16'
     bee init -p ice7360 -v $1 && bee sync -j16
-    echo "[+] module load artifactory"
 }
 
 function CopyBinFromBender()
@@ -98,8 +101,14 @@ function Copy2ShareFolder()
     echo "[+] Copy to /nfs/imu/disks/sw_builds/XMM7360/Pre-Int"
     cd `ls -l | egrep -o "temp_ICE7360_PREINT_BENDER_[0-9]{4}"`
     destFolder=`ls -l | egrep -o "ICE7360_PREINT_BENDER_[0-9]{4}"`
-    echo "copy $destFolder to /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1"
-    cp -r $destFolder /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1
+    
+    if [ ! -d /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1 ];
+    then
+        echo "copy $destFolder to /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/${1}"
+        cp -r $destFolder /nfs/imu/disks/sw_builds/XMM7360/Pre-Int/$1
+    else
+        echo "/nfs/imu/disks/sw_builds/XMM7360/Pre-Int/${1} already exist"
+    fi
     echo "[+] Change to ${WORKSPACE}"
     cd ${WORKSPACE}
 }
@@ -131,25 +140,31 @@ function TriggerHarts()
     printCurrentDir
     echo "param is PREINT ID ..."
     cd  modem/system-build/product
-    module unload python
-    module load python
-    # PREINT ID ICE7360_05.1716.05_PREINT_THU_05
     if [ -f "submit_harts_jobs.sh" ];
     then
 	echo "Trigger file is ok"
     fi
+    module unload python
+    module load python
     ./submit_harts_jobs.sh $1 PREINT_ICE7360
-
-    
-    echo "[+] Change directory to ${WORKSPACE}"
-    cd ${WORKSPACE}
+    printCurrentDir
     echo "[+] Trigger Harts end.."
 }
 function Trigger3GW()
 {
+    cd ${WORKSPACE}
+    # param 1: preintId
+    version=`echo $1 | awk -F_ '{print $2}'`
+    #05.1717.05
+    RBN=${version:4:3}
+    UBN=${version:9:1}
+    echo "Trigger 3GW --RBN ${RBN} --UBN ${UBN} --FILENAME ${1}"
+    cd fw_3g/xmm7360/umts_fw_dev/tools/integration_mgt/common/scripts/oc6
+    printCurrentDir
+    echo "[+] Init oc6env "
+    oc6env
    # 1 preint id
-    rbn=
-    ./FW3G_GC_SUBMITTER_UBS.sh --PROJECT XMM7360 --SYSTARGET XMM7360_REV_2.1_NAND --EB no --RELEASE yes --FORCEREBUILD yes --TESTSUITE full --REGRESSION gc --RBN $2 --UBN $3 --FILENAME $1
+    ./FW3G_GC_SUBMITTER_UBS.sh --PROJECT XMM7360 --SYSTARGET XMM7360_REV_2.1_NAND --EB no --RELEASE yes --FORCEREBUILD yes --TESTSUITE full --REGRESSION gc --RBN $RBN --UBN $UBN --FILENAME $1
 }
 function start()
 {
@@ -184,9 +199,10 @@ function start()
     CherryPick $preintId
     
     CopyBinFromBender $benderId
-    #Copy2ShareFolder $preintId
+    Copy2ShareFolder $preintId
     RenameTempFolder
     TriggerHarts $preintId
+    
 }
 
 function testpreint()
