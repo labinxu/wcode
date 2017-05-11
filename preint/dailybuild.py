@@ -50,7 +50,8 @@ import utils.utils
 import datetime
 from bs4 import BeautifulSoup
 from utils import util_excel
-
+from utils import spformhelper
+import time
 ErrorTag ="ERROR: %s"
 
 def login_preint(username, password):
@@ -190,6 +191,20 @@ class DailyBuilder():
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
         return p
 
+    def comunicateWithSH(self, cmdline):
+        if cmdline.strip() == '':
+            print('cmdline can not empty')
+            return
+
+        stdin, stdout, stderr = self.shInteractor.execCommand(cmdline)
+        while True:
+            line = stdout.readline()
+            if line != '':
+                print(line[0:-1])
+                time.sleep(0.5)
+            else:
+                break
+        
     def runShCmd(self, cmdline):
         if cmdline.strip() == '':
             print('cmdline can not empty')
@@ -199,14 +214,6 @@ class DailyBuilder():
 
         
     def initBeeWorkspace(self, buildname):
-        # self.hostname = 'musxeris016.imu.intel.com'
-        # self.port = 22   
-        # self.username = 'labinxux'   
-        # self.password = 'Mar@0303'
-
-        #self.shInteractor = ShInteractor(username='labinxux',
-         #                                hostname='musxeris016.imu.intel.com')
-        
         out, err = self.runShCmd('whoami')
         self.useraccount = out.read().strip()
         self.workspaceOnServer = '/local/%s/dailybuild/' % self.useraccount
@@ -286,6 +293,12 @@ class DailyBuilder():
         self.sharepointTable.append(('XMM7360 Artifactory Location', artifactorylocation + buildname))
         self.sharepointTable.append(('PRIO_1 Tickets', 'Proi red covered in xls'))
         
+        #get hartlink
+        #https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_MODEM_NONPRSVG_PIT_PUBLISHER/148 
+        keys = self.bn2url[buildname].split('/')[-2:]
+        searshkeys = '%s_%s' % (keys[0], keys[1])
+        print("[+] search keys %s" % searshkeys)
+        self.sharepointTable.append(('HartsLink', self.constructResultUrl(searshkeys)))
         #===================================================
         revNANDLink = 'https://tcloud6-delivery.rds.intel.com/b/job/XMM7360_UBS-FULL-MODEM-BUILD_XMM7360-REV-2.1-NAND/lastBuild/console'
  
@@ -302,26 +315,51 @@ class DailyBuilder():
         self.sharepointTable.append(('STT Decoders', STTDecoders + '\\'+ sst))
 
     def run(self, buildname):
+        self.initBeeWorkspace(buildname)
         home = "/nfs/site/home/%s" % self.useraccount 
 
         cmdline = home + ('/bin/dailybuild.sh %s' % buildname)
         print('Run %s' % cmdline)
-        stdout, stderr = self.runShCmd(cmdline)
-        print(stdout.read())
+        self.comunicateWithSH(cmdline)
+        
         confverion = self.getInitConfigVersion(buildname)
         self.sharepointTable.append(('Content / Components:', confverion))
 
-
-    def writeXlsxFile(self, filename):
+    def writeXlsxFile(self, filename, buildname):
         # wirte checklist
         xlsxHelper = util_excel.XlsxHelper("./data/RELEASE_CHECKLIST_TEMPLATE.xlsx")
-        xlsxHelper.write('C1', tag2)
+        xlsxHelper.write('C1', buildname)
         xlsxHelper.write('C10', self.blrelUrl)
         # RELEASE_CHECKLIST_05.1720.01.xlsx
         # tag2  ICE7360_05.1720.03
         xlsxHelper.save(filename)
 
-if __name__ == '__main__':
+    def constructResultUrl(self, keysearch):
+        content = self._gethartsResult(keysearch)
+        tables = []
+        jsondata = json.loads(content)
+        for tabledata in jsondata:
+            tables.append(tabledata['tsName'])
+        baseurl = 'http://harts.imu.intel.com/harts6/ViewSelectedTestReport.do?tsNames=toggle_all;'
+        for i in tables:
+            baseurl += i+';'
+        return baseurl
+        
+    def _gethartsResult(self, keysearch):
+        hartsurl = 'http://harts.imu.intel.com/harts6/GetDetailsForBuildSearch.do?tsName='
+        content = self.browser.open_without_parser(hartsurl+keysearch)
+        return content
+        
+def Download():
+    br = spformhelper.SPFormHelper('./bin/IEDriverServer.exe')
+    br.downloadCqUtpSms()
+    result = raw_input("IS Download Finised: ")
+    while result != 'Y':
+        time.sleep(1000)
+        
+def DailyBuild():
+
+   # Download()
     dbu = DailyBuilder()
     tag1, tag2 = dbu.getTopBuildName()
     tag1, tag2 = utils.sortBuildName(tag1, tag2)
@@ -331,27 +369,35 @@ if __name__ == '__main__':
     # debug
     #if not cur_tag:
     diff = dbu.getDifference(cur_tag, tag2)
+    if len(diff) == 0:
+        print('======================')
+        print("[+] Warning: There is no different, Please double check it")
     #else:
      #   diff = dbu.getDifference(tag1, tag2)
     dbu.writeSharefile(diff)
     dbu.getDataForBuildName(tag2)
-    # upload the isharefile and ReleaseContent file
-    dbu.initBeeWorkspace(tag2)
-    dbu.run(tag2.strip())
-
     sufixname=tag2[8:]
+    # upload the isharefile and ReleaseContent file
+    #dbu.run(tag2.strip())
+    
     releasechecklistfile = 'RELEASE_CHECKLIST_%s.xlsx' % sufixname
-    dbu.writeXlsxFile(releasechecklistfile)
+    dbu.writeXlsxFile(releasechecklistfile, tag2)
     SHARE_FOLDER_ROOT='/nfs/imu/disks/sw_builds/XMM7360/Release/MODEM_%s/MAIN/%s/'
     #MODEM_05.1720\MAIN\ICE7360_05.1720.03
     detfile = SHARE_FOLDER_ROOT % (tag2[8:-3], tag2)
     dbu.uploadfile(releasechecklistfile, detfile + releasechecklistfile)
-    
     print('\n\n==============END=================\n\n')
-
-
+              
     print('\n\n===============Table Data====================')
     for key, value in dbu.sharepointTable:
         print("%s: %s" % (key, value))
     print('===============End====================\n\n\n')
     
+    print('=========update refresh the sharepoint ================')
+              
+    br = spformhelper.SPFormHelper('./bin/IEDriverServer.exe')
+    
+    br.fillForm(base, dbu.sharepointTable)
+
+if __name__ == '__main__':
+    DailyBuild()
