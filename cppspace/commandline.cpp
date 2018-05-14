@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <iostream>
+#include <map>
 #include "argument.hpp"
 
 namespace Args{
@@ -8,8 +10,17 @@ namespace Args{
     class Parser{
     public:
         Parser(const string &name):name_(name){}
+
+        string operator->(const string&name){
+            auto end = namespace_.end();
+            if(end != namespace_.find(name)){
+                return namespace_[name];
+            }
+
+        }
     private:
         string name_;
+        map<string,string> namespace_;
     };
 
     class SubParser{
@@ -48,7 +59,7 @@ namespace Args{
             arguments_.push_back(arg);
         }
 
-        void ParseArgs(){
+        void parse(){
             //
         }
     private:
@@ -60,7 +71,9 @@ namespace Args{
 
 int main(){
     Args::Argparse argparser("demo");
-    argparser.add_argument("-t","--test",argtype=Int);
+    argparser.add_argument("-t","--test",argtype=Int, dest="adb");
+    parser = argparser.parse();
+    std::cout<<parser.adb<<std::endl;
 
 }
 
