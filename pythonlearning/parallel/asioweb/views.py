@@ -1,4 +1,5 @@
 import asyncio, logging
+import aiohttp
 from aiohttp import web
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s-%(name)s-%(levelname)s-%(message)s')
@@ -8,21 +9,36 @@ routes = web.RouteTableDef()
 async def index(request):
     return web.Response(text='Hello Aiohttp!')
 
-@routes.post('/join')
 async def join(request):
     ''' join the game'''
     data = await request.json()
-    data['name']
 
 async def exam_post(request):
     post = await request.json()
     try:
         resp = web.Response(text='Post data %s'% post['name'])
-        
     except Exception as e:
         resp =  web.Response(text=str(e))
-    finally:
-        return resp
+
+    return resp
+
+async def websocket_handler(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    async for msg in ws:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.data == 'close':
+                await ws.close()
+            else:
+                await ws.send_str(msg.data+'/answer')
+
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            print('ws connection closed with exception %s' % ws.exception())
+    print('websocket connection closed')
+
+    return ws
+
+
 '''
 from flask.ext.aiohttp import websocket
 
