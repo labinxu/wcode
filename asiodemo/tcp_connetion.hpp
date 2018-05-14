@@ -67,9 +67,11 @@ public:
 private:
 
     void handle_read_header(const boost::system::error_code &error){
-
+        std::cout<<"handle read header"<<std::endl;
         bool ret = read_msg_.decode_header();
+
         if (!error && ret){
+
             boost::asio::async_read(socket_,
                                     boost::asio::buffer(read_msg_.body(),
                                                         read_msg_.body_length()),
@@ -82,15 +84,16 @@ private:
         else{
             std::cout<<"disconnected!"<<std::endl;
         }
-
+        std::cout<<error<<"=="<<read_msg_.body_length()<<std::endl;
 
     }
 
     void handle_read_body(const boost::system::error_code &error){
 
         if (!error){
-            std::cout.write(read_msg_.body(), read_msg_.body_length());
-            std::cout<<std::endl;
+            //std::cout.write(read_msg_.body(), read_msg_.body_length());
+            //std::cout<<std::endl;
+
             boost::asio::async_read(socket_,
                                      boost::asio::buffer(read_msg_.data(),
                                                          message::header_length),
