@@ -7,8 +7,9 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <string>
-#include "../message.hpp"
+#include "message.hpp"
 using boost::asio::ip::tcp;
 using namespace boost::asio;
 
@@ -19,43 +20,52 @@ class tcp_client :public boost::enable_shared_from_this<tcp_client>{
 public:
     tcp_client(boost::asio::io_service &io_service,
                tcp::endpoint &endpoint)
-        :io_service_(io_service),socket_(io_service){
+        :io_service_(io_service),
+         socket_(io_service),
+         active_(true){
         socket_.async_connect(endpoint,
                               boost::bind(&tcp_client::handle_connect,
                                           this,
                                           placeholders::error));
-
     }
 
     void close(){
         std::cout<<"client close"<<std::endl;
     }
-    void send(const message &msg){
-        std::cout<<"send "<<msg.body()<<std::endl;
-        io_service_.post(boost::bind(&tcp_client::do_send,
-                                     this, msg));
 
-    }
 private:
     boost::asio::ip::tcp::endpoint endpoint_;
     boost::asio::io_service &io_service_;
     tcp::socket socket_;;
 
 public:
-    void do_send(message msg){
-        std::cout<<"do send"<<std::endl;
+    bool isActive(){
+        return active_;
+    }
+    void send(const message &msg){
+        io_service_.post(boost::bind(&tcp_client::do_send, this, msg));
+    }
+    void do_send(const message &msg){
         boost::asio::async_write(socket_,
                                  boost::asio::buffer(msg.data(), msg.length()),
                                  boost::bind(&tcp_client::handle_write,
                                              this,
-                                             placeholders::error,
-                                             placeholders::bytes_transferred));
+                                             placeholders::error));
+
+        // boost::asio::async_read(socket_,
+        //                         boost::asio::buffer(received_msg_.data(),
+        //                                             message::header_length),
+        //                         boost::bind(&tcp_client::handle_read_header,
+        //                                     this,
+        //                                     placeholders::error,
+        //                                     placeholders::bytes_transferred));
     }
 private:
-    void handle_write(const boost::system::error_code &ec, size_t bytes_transferred){
-        if(!ec){
-            std::cout<<"handle write msg "<<bytes_transferred<< std::endl;
+    void handle_write(const boost::system::error_code &ec){
+        if(ec){
+            std::cout<<"ERROR "<<boost::system::system_error(ec).what()<<std::endl;
         }
+
     }
 
     void handle_read(const boost::system::error_code &ec, size_t bytes_transferred){
@@ -80,12 +90,14 @@ private:
         }
         else{
             std::cout<<"disconnected!"<<std::endl;
+            active_ = false;
         }
 
     }
 
     void handle_read_body(const boost::system::error_code &error){
         if (!error){
+            std::cout<<"From Server:";
             std::cout.write(received_msg_.body(), received_msg_.body_length());
             std::cout<<std::endl;
 
@@ -97,27 +109,31 @@ private:
                                                  placeholders::error,
                                                  placeholders::bytes_transferred));
         }
+        else{
+            std::cout<<"handle read body error"<<std::endl;
+        }
     }
 
     void handle_connect(const boost::system::error_code &error){
         if (!error){
-            // boost::asio::async_read(socket_,
-            //                         boost::asio::buffer(received_msg_.data(),
-            //                                             message::header_length),
+            boost::asio::async_read(socket_,
+                                    boost::asio::buffer(received_msg_.data(),
+                                                        message::header_length),
 
-            //                         boost::bind(&tcp_client::handle_read_header,
-            //                                     this,
-            //                                     placeholders::error,
-            //                                     placeholders::bytes_transferred));
+                                    boost::bind(&tcp_client::handle_read_header,
+                                                this,
+                                                placeholders::error,
+                                                placeholders::bytes_transferred));
 
-            message msg("Hello Server");
-            msg.encode_header();
-            boost::asio::async_write(socket_,
-                                     boost::asio::buffer(msg.data(), msg.length()),
-                                     boost::bind(&tcp_client::handle_write,
-                                                 this,
-                                                 placeholders::error,
-                                                 placeholders::bytes_transferred));
+            // message msg("Hello Server");
+            // msg.encode_header();
+            // boost::asio::async_write(socket_,
+            //                          boost::asio::buffer(msg.data(), msg.length()),
+            //                          boost::bind(&tcp_client::handle_write,
+            //                                      this,
+            //                                      placeholders::error));
+
+            std::cout<<"connected"<<std::endl;
 
         }
         else {
@@ -126,35 +142,7 @@ private:
     }
 private:
     message received_msg_;
+    std::map<std::string, message> events_;
     message_queue send_msgs_;
+    bool active_;
 };
-
-int main(){
-
-    try{
-        boost::asio::io_service io_service;
-        tcp::endpoint endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
-        tcp_client client(io_service, endpoint);
-        boost::thread t(boost::bind(&boost::asio::io_service::run,
-                                    &io_service));
-
-        while(true)
-        {
-            using namespace std;
-            message msg;
-            string line;
-            std::getline(std::cin, line);
-            msg.body_length(line.size());
-            memcpy(msg.body(), line.c_str(), msg.body_length());
-            msg.encode_header();
-            client.do_send(msg);
-
-        }
-        client.close();
-        t.join();
-
-    }
-    catch (std::exception &e){
-        std::cerr<<e.what()<<std::endl;
-    }
-}

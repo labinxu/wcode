@@ -24,6 +24,12 @@ public:
         memcpy(body(), msg, body_length());
         encode_header();
     }
+
+    void clear(){
+        memset(data_, '\0', length());
+        body_length_ = 0;
+    }
+
     char *data(){return data_;}
     const char* data() const {return data_;}
     size_t length() const{
@@ -41,7 +47,7 @@ public:
     void encode_header(){
         using namespace std;
         char header[header_length+1]="";
-        sprintf(header,"%4d",body_length_);
+        sprintf(header,"%4lu",body_length_);
         memcpy(data_, header, header_length);
     }
     bool decode_header(){
