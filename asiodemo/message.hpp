@@ -4,9 +4,12 @@
 #include <cstring>
 #include <cstdio>
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 class message{
 public:
+    typedef boost::shared_ptr<message> pointer;
+    
     enum {header_length = 4};
     enum {max_body_length = 128};
 

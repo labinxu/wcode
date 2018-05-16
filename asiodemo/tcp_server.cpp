@@ -13,16 +13,36 @@
 #include <boost/enable_shared_from_this.hpp>
 #include "message.hpp"
 #include "tcp_server.hpp"
+#include "cmdline.h"
 typedef std::deque<message> message_queue;
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;
+using namespace std;
 
+int main(int argc, char* argv[]){
+    cmdline::parser parser;
+    parser.add<std::string>("host", 'h', "host ip",false,"127.0.0.1");
+    parser.add<int>("port",'p',"port number", false, 8001);
 
-int main( int argc, char* argv[]){
+    parser.add<std::string>("peer", 's', "peer host ip",false, "127.0.0.1");
+    parser.add<int>("peerport",'P',"peer host port", false, 8800);
+
+    parser.parse_check(argc, argv);
+
+    std::string hostip = parser.get<string>("host");
+    int  hostport = parser.get<int>("port");
+
+    std::cout<<"listening on:"<<hostip<<":"<<hostport<<std::endl;
+    tcp_server::address hostaddress = boost::make_tuple(hostip, hostport);
+    std::string peer_host = parser.get<string>("peer");
+    int peer_port = parser.get<int>("peerport");
+
+    tcp_server::address peer_server = boost::make_tuple(peer_host, peer_port);
     try{
         boost::asio::io_service io_service;
-        tcp_server server(io_service, "127.0.0.1", 8001);
+        tcp_server server(io_service, hostaddress, peer_server);
+
         boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
         while(true)
         {

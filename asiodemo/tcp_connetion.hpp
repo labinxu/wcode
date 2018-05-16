@@ -12,11 +12,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "message.hpp"
+#include "tcp_client.h"
 typedef std::deque<message> message_queue;
 using namespace boost::asio;
 using boost::asio::ip::tcp;
 
-
+class tcp_server;
 class tcp_connection: public boost::enable_shared_from_this<tcp_connection>{
 public:
     typedef boost::shared_ptr<tcp_connection> pointer;
@@ -33,14 +34,22 @@ public:
                                           shared_from_this(),
                                           placeholders::error));
 
+
+
     }
 
-    tcp_connection(boost::asio::io_service &io_service)
+    tcp_connection(boost::asio::io_service &io_service,tcp_server *server)
         :io_service_(io_service),
          socket_(io_service),
-         active_(true){
+         active_(true),
+         server_(server_){
 
     }
+
+    void set_client(const tcp_client::pointer client){
+        client_ = client;
+    }
+
     void send(const message &msg){
         io_service_.post(boost::bind(&tcp_connection::do_send,
                                      shared_from_this(),
@@ -141,11 +150,14 @@ private:
         }
     }
 
+    
 
 private:
     boost::asio::io_service &io_service_;
+    tcp_client::pointer client_;
     tcp::socket socket_;
     message read_msg_;
     message_queue message_queue_;
     bool active_;
+    tcp_server *server_;
 };
