@@ -18,8 +18,9 @@ typedef std::deque<message> message_queue;
 class tcp_client :public boost::enable_shared_from_this<tcp_client>{
 public:
     tcp_client(boost::asio::io_service &io_service,
-               tcp::endpoint &endpoint)
-        :io_service_(io_service),socket_(io_service){
+               tcp::endpoint &endpoint, )
+        :io_service_(io_service),
+         socket_(io_service){
 
         socket_.async_connect(endpoint,
                               boost::bind(&tcp_client::handle_connect,

@@ -4,12 +4,13 @@
 #include <cstring>
 #include <cstdio>
 #include <string>
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 
 class message{
 public:
     typedef boost::shared_ptr<message> pointer;
-    
+
     enum {header_length = 4};
     enum {max_body_length = 128};
 
@@ -64,7 +65,14 @@ public:
         }
         return true;
     }
+    message::pointer clone(){
+        message::pointer cloneobj = message::pointer(new message());
+        memcpy(cloneobj->data(), data(), header_length+max_body_length);
+        cloneobj->body_length_ = this->body_length_;
 
+        return cloneobj;
+
+    }
 private:
     char data_[header_length+max_body_length];
     size_t body_length_;

@@ -12,10 +12,10 @@ RESULT = bin
 all:$(SERVER) $(CLIENT) $(RESULT)
 .PHONY : all
 
-$(SERVER): tcp_server.o tcp_client.o
+$(SERVER): server.o tcp_server.o tcp_client.o tcp_connection.o
 	$(CC) $^ -o $@ $(INCLUDES) $(LIBS_PATH) $(LIBS)
 
-$(CLIENT):client.o tcp_client.o
+$(CLIENT):client.o tcp_client.o tcp_server.o tcp_connection.o
 	$(CC) $^ -o $@ $(INCLUDES) $(LIBS_PATH) $(LIBS)
 
 $(RESULT):

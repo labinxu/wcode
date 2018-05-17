@@ -14,10 +14,11 @@ int main(){
         boost::asio::io_service io_service;
         tcp::endpoint endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 8001);
         tcp_client client(io_service, endpoint);
+        //client.connect();
         boost::thread t(boost::bind(&boost::asio::io_service::run,
                                     &io_service));
 
-        while(client.isActive())
+        while(client.active())
         {
             using namespace std;
             message msg;
@@ -29,7 +30,7 @@ int main(){
             client.send(msg);
 
         }
-        client.close();
+        //client.close();
         t.join();
 
     }

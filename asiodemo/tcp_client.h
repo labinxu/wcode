@@ -1,7 +1,6 @@
 #ifndef TCP_CLIENT_H
 #define TCP_CLIENT_H
 
-#include <deque>
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
@@ -17,19 +16,21 @@ using boost::asio::ip::tcp;
 using namespace boost::asio;
 
 //https://www.boost.org/doc/libs/1_39_0/doc/html/boost_asio/example/chat/chat_client.cpp
-typedef std::deque<message> message_queue;
 
+class tcp_server;
 class tcp_client{//} :public boost::enable_shared_from_this<tcp_client>{
 public:
     typedef boost::shared_ptr<tcp_client> pointer;
 
-    tcp_client(boost::asio::io_service &io_service, tcp::endpoint &endpoint);
+    tcp_client(boost::asio::io_service &io_service,
+               tcp::endpoint &endpoint,
+               tcp_server *local_server=NULL);
 
     void close();
 
-
+    void connect();
 public:
-    bool isActive();
+    bool active();
     void send(const message &msg);
     void do_send(const message &msg);
 private:
@@ -51,14 +52,16 @@ public:
 
     //static tcp_client::pointer create(boost::asio::io_service &io_service,
     //const std::string &address, int port);
-
 private:
+    void simulate_send_message();
+private:
+    tcp_server *local_server_;
+
     boost::asio::io_service &io_service_;
     tcp::socket socket_;
     boost::asio::ip::tcp::endpoint endpoint_;
     message received_msg_;
     std::map<std::string, message> events_;
-    message_queue send_msgs_;
     bool active_;
 };
 
