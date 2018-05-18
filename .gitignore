@@ -11,4 +11,5 @@ client
 GPATH
 GRTAGS
 GTAGS
+cscope*
 .#*

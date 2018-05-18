@@ -44,8 +44,8 @@ tcp_server::tcp_server(boost::asio::io_service &io_service,
 
         tcp_client::pointer c(new tcp_client(io_service_, endpoint, this));
         client_ = c;
-        boost::thread handle_out_message(boost::bind(&tcp_server::handle_out_message, this));
-        boost::thread handle_in_message(boost::bind(&tcp_server::handle_in_message,this));
+        boost::thread handle_out_message_t(boost::bind(&tcp_server::handle_out_message, this));
+        boost::thread handle_in_message_t(boost::bind(&tcp_server::handle_in_message,this));
     }
     else{
         std::cout<<"Peer Server Disabled"<<std::endl;
@@ -58,6 +58,7 @@ void tcp_server::handle_out_message(){
         //
         message::pointer msg = pick_out_message();
         std::cout<<"handle message: "<<msg->body()<<std::endl;
+        handle_out_message(msg);
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }
@@ -68,6 +69,7 @@ void tcp_server::handle_in_message(){
         //
         message::pointer msg = pick_in_message();
         std::cout<<"handle message"<<msg->body()<<std::endl;
+        handle_in_message(msg);
         boost::this_thread::sleep(boost::posix_time::seconds(1));
     }
 }

@@ -37,6 +37,10 @@ public:
     void send(const message &msg);
     void append_out_message(const message::pointer &msg);
     void append_in_message(const message::pointer &msg);
+ protected:
+    virtual void handle_out_message(const message::pointer &msg){};
+    virtual void handle_in_message(const message::pointer &msg){};
+
  private:
     void handle_out_message();
     void handle_in_message();
