@@ -18,3 +18,16 @@ prev->next = entr->next;
 }
 
 }
+
+// good taste
+remove_list_entr(entry){
+  // The indirect pointer points to the address of the thing we'll update
+  indirect = &head;
+  // Walk the list looking for the thing that
+  // points to the entr we want to remove
+  while((*indirect)!= entry){
+    indirect = &(*indirect)->next;
+  } 
+  // and just remove it
+  *indirect = entry->next;
+}
