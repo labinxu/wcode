@@ -49,3 +49,67 @@ for (r = 0; r < GRID_SIZE; ++r) {
             grid[r][c] = 0;
     }
 }
+///
+typedef struct node{
+	node(int v):data(v),next(NULL){};
+	int data;
+	node *next;
+} node;
+class List{
+	private:
+		node *head;
+	public:
+	List():head(NULL){}
+	void push_back(int v){
+		
+		if(!head){
+			head = new node(v);
+			return;
+		}
+		
+		node *tmp = head;
+		while(tmp){
+			tmp = tmp->next;
+		}
+		tmp = new node(v);
+	};
+	void push_back_v2(int v){
+		
+		if(!head){
+			head = new node(v);
+			return;
+		}
+		
+		node *tmp = head;
+		while(tmp){
+			tmp = tmp->next;
+		}
+		tmp = new node(v);
+	};
+	public:
+	void remove_bad(node* entry){
+		node* prev = NULL;
+		node* walk = head;
+		while(walk->data != entry->data){
+			prev = walk;
+			walk = walk->next;
+		}
+
+		if(!prev){
+			head = entry->next;
+		}
+		else{
+			prev->next = entry->next;
+		};
+	};
+
+	void remove_good(node* entry){
+		node** indirect = &head;
+		while((*indirect)->data != entry->data){
+			indirect = &(*indirect)->next;
+		}
+	
+		// remove
+		*indirect = entry->next;
+	}
+};
