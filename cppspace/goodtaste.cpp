@@ -50,6 +50,9 @@ for (r = 0; r < GRID_SIZE; ++r) {
     }
 }
 ///
+#include <iostream>
+
+using namespace std;
 typedef struct node{
 	node(int v):data(v),next(NULL){};
 	int data;
@@ -61,17 +64,17 @@ class List{
 	public:
 	List():head(NULL){}
 	void push_back(int v){
-		
+		cout<<"push_back:"<<v<<endl;
 		if(!head){
 			head = new node(v);
 			return;
 		}
 		
 		node *tmp = head;
-		while(tmp){
+		while(tmp->next){
 			tmp = tmp->next;
 		}
-		tmp = new node(v);
+		tmp->next = new node(v);
 	};
 	void push_back_v2(int v){
 		
@@ -87,29 +90,53 @@ class List{
 		tmp = new node(v);
 	};
 	public:
-	void remove_bad(node* entry){
+	void display(){
+		cout<<"display()"<<endl;
+		node *tmp=head;
+		while(tmp){
+			cout<<tmp->data<<";";
+			tmp = tmp->next;
+		};
+		cout<<endl;
+	};
+	void remove_bad(int entry){
 		node* prev = NULL;
 		node* walk = head;
-		while(walk->data != entry->data){
+		while(walk->data != entry){
 			prev = walk;
 			walk = walk->next;
 		}
 
 		if(!prev){
-			head = entry->next;
+			head = walk->next;
 		}
 		else{
-			prev->next = entry->next;
+			prev->next = walk->next;
 		};
 	};
 
-	void remove_good(node* entry){
+	void remove_good(int entry){
 		node** indirect = &head;
-		while((*indirect)->data != entry->data){
+		while((*indirect)->data != entry){
 			indirect = &(*indirect)->next;
 		}
 	
 		// remove
-		*indirect = entry->next;
+		*indirect = (*indirect)->next;
 	}
 };
+int main() {
+	cout << "hello https://tool.lu/" << endl;
+	List lst;
+	for(int i=0;i<10;i++){
+		lst.push_back(i);
+	};
+	lst.display();
+	node n(0);
+	//lst.remove_bad(2);
+	//lst.display();
+	lst.remove_good(10);
+	lst.display();
+	
+	return 0;
+}
