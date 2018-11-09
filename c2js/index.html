@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1">
+
+    <title>C2J</title>
+    <script language="JavaScript">
+     function call_cvd_female(){
+         var errorBuf;
+         var errorBufSize;
+         var ret = cvd_female(25, 1, 0,1,1,0,1,30,8,1,12,80,3,10,0,errorBuf,errorBufSize);
+         alert(ret);
+		};
+    </script>
+    <style>
+      body {
+        border: 1px solid black;
+      }
+    </style>
+
+    <!-- Inline scripts are forbidden in Firefox OS apps (CSP restrictions),
+         so we use a script file. -->
+    <script src="c2js.js" defer></script>
+  </head>
+
+  <body>
+    <!-- This code is in the public domain. Enjoy! -->
+      <input type="button" value="hello" onclick="call_cvd_female()"></button>
+  </body>
+
+</html>
