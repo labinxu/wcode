@@ -1,0 +1,23 @@
+SRCS = $(wildcard *.cpp ../lib/*.cpp)
+OBJS = $(SRCS:.cpp = .o)    #OBJS将$(SRCS)下的.c文件转化为.o文件
+
+CC = g++   #代表所使用的编译器
+
+INCLUDES = -I../include
+
+LIBS = -L../lib
+
+CCFLAGS = -g -Wall -O0 -std=c++11   #附加参数
+
+OUTPUT = share.exe   #输出程序名称
+
+all:$(OUTPUT)
+
+$(OUTPUT) : $(OBJS)
+	$(CC) $^ -o $@ $(INCLUDES) $(LIBS) $(CCFLAGS)
+%.o : %.cpp
+	$(CC) -c $< $(CCFLAGS)
+clean:
+	rm -rf *.out *.o ${OUTPUT} #清除中间文件及生成文件
+
+.PHONY:clean
