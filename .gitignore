@@ -5,6 +5,7 @@ out/*
 *.xml
 *.o
 *.a
+*.exe
 */out/
 server
 client
